@@ -3,12 +3,12 @@ import numpy as np
 import wwts_globals
 
 
-class MidiFileNormalizer:
+class NormalizedMidiFile(mido.MidiFile):
 
 
-    def __init__(self, filename, do_normalize=True):
+    def __init__(self, filename):
 
-        self.filename = filename
+        super().__init__(filename)
 
         self.note_distribution = np.zeros((128,))
         self.keysig_distribution = np.zeros((12,))
@@ -17,28 +17,23 @@ class MidiFileNormalizer:
         self.tick_transpose_coef = 1
         self.note_transpose_interval = 0
 
-        self.normalized_midi_file = None
-
-        if do_normalize:
-            self.normalize()
+        self.normalize()
 
 
     def normalize(self):
 
-        midi_file = mido.MidiFile(self.filename)
-
         # read the file and calculate all the info we need first
-        self.tick_transpose_coef = wwts_globals.TICKS_PER_BEAT / midi_file.ticks_per_beat
-        self.get_note_distributions(midi_file)
+        self.tick_transpose_coef = wwts_globals.TICKS_PER_BEAT / self.ticks_per_beat
+        self.get_note_distributions()
         self.get_key_signature()
         self.get_note_transpose_interval()
 
         # build the new mido object
-        self.normalized_midi_file = mido.MidiFile(type=midi_file.type, ticks_per_beat=wwts_globals.TICKS_PER_BEAT)
-        for track in midi_file.tracks:
-            self.normalized_midi_file.tracks.append(self.normalize_track(track))
+        new_tracks = [self.normalize_track(track) for track in self.tracks]
 
-        return self.normalized_midi_file
+        self.ticks_per_beat = wwts_globals.TICKS_PER_BEAT
+        self.tracks = new_tracks
+
 
 
     def get_note_transpose_interval(self):
@@ -57,9 +52,9 @@ class MidiFileNormalizer:
         self.note_transpose_interval = keysig_transpose_interval + octave_transpose_interval
 
 
-    def get_note_distributions(self, midi_file):
+    def get_note_distributions(self):
 
-        for msg in midi_file:
+        for msg in self:
 
             if msg.type == "note_on":
 
@@ -109,9 +104,6 @@ class MidiFileNormalizer:
                 args["note"] = msg.note + self.note_transpose_interval
             if hasattr(msg, "time"):
                 args["time"] = int(msg.time * self.tick_transpose_coef)
-            if hasattr(msg, "clocks_per_click"):
-                # TODO
-                pass
 
             new_msg = msg.copy(**args)
             new_track.append(new_msg)
@@ -120,5 +112,5 @@ class MidiFileNormalizer:
 
 
 if __name__ == "__main__":
-    mid = MidiFileNormalizer("/home/mark/Documents/Barcarolle in F sharp Major.mid").normalized_midi_file
-    wwts_globals.dump_msgs(mid, 10)
+    mid = NormalizedMidiFile("/home/mark/Documents/Barcarolle in F sharp Major.mid")
+    wwts_globals.dump_msgs(mid, 100)
