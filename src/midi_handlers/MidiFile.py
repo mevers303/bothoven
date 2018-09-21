@@ -17,6 +17,8 @@ class MidiFileNormalizer:
         self.tick_transpose_coef = 1
         self.note_transpose_interval = 0
 
+        self.normalized_midi_file = None
+
         if do_normalize:
             self.normalize()
 
@@ -25,11 +27,18 @@ class MidiFileNormalizer:
 
         midi_file = mido.MidiFile(self.filename)
 
+        # read the file and calculate all the info we need first
         self.tick_transpose_coef = wwts_globals.TICKS_PER_BEAT / midi_file.ticks_per_beat
-
         self.get_note_distributions(midi_file)
         self.get_key_signature()
         self.get_note_transpose_interval()
+
+        # build the new mido object
+        self.normalized_midi_file = mido.MidiFile(type=midi_file.type, ticks_per_beat=wwts_globals.TICKS_PER_BEAT)
+        for track in midi_file.tracks:
+            self.normalized_midi_file.tracks.append(self.normalize_track(track))
+
+        return self.normalized_midi_file
 
 
     def get_note_transpose_interval(self):
@@ -43,10 +52,9 @@ class MidiFileNormalizer:
         # now transpose it to middle C (C4) based on the most common octave
         transposed_notes = np.roll(self.note_distribution, keysig_transpose_interval)
         C_octaves = {i: transposed_notes[i] for i in range(0, 128, 12)}
-        octave_transpose_interval = max(C_octaves, key=lambda i: C_octaves[i])
+        octave_transpose_interval = 60 - max(C_octaves, key=lambda i: C_octaves[i])
 
         self.note_transpose_interval = keysig_transpose_interval + octave_transpose_interval
-
 
 
     def get_note_distributions(self, midi_file):
@@ -87,3 +95,30 @@ class MidiFileNormalizer:
                     break
 
         self.original_keysig = best_match
+
+
+    def normalize_track(self, track):
+
+        new_track = mido.MidiTrack()
+
+        for msg in track:
+
+            args = {}
+
+            if hasattr(msg, "note"):
+                args["note"] = msg.note + self.note_transpose_interval
+            if hasattr(msg, "time"):
+                args["time"] = int(msg.time * self.tick_transpose_coef)
+            if hasattr(msg, "clocks_per_click"):
+                # TODO
+                pass
+
+            new_msg = msg.copy(**args)
+            new_track.append(new_msg)
+
+        return new_track
+
+
+if __name__ == "__main__":
+    mid = MidiFileNormalizer("/home/mark/Documents/Barcarolle in F sharp Major.mid").normalized_midi_file
+    wwts_globals.dump_msgs(mid, 10)
