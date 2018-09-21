@@ -1,3 +1,8 @@
+# Mark Evers
+# 9/20/18
+# NormalizedMidiFile.py
+# A class that extends mido.MidiFile.  Will normalize tick resolution and transpose key to middle C.
+
 import mido
 import numpy as np
 import wwts_globals
@@ -46,8 +51,8 @@ class NormalizedMidiFile(mido.MidiFile):
 
         # now transpose it to middle C (C4) based on the most common octave
         transposed_notes = np.roll(self.note_distribution, keysig_transpose_interval)
-        C_octaves = {i: transposed_notes[i] for i in range(0, 128, 12)}
-        octave_transpose_interval = 60 - max(C_octaves, key=lambda i: C_octaves[i])
+        c_octaves = {i: transposed_notes[i] for i in range(0, 128, 12)}
+        octave_transpose_interval = 60 - max(c_octaves, key=lambda i: c_octaves[i])
 
         self.note_transpose_interval = keysig_transpose_interval + octave_transpose_interval
 
@@ -111,6 +116,11 @@ class NormalizedMidiFile(mido.MidiFile):
         return new_track
 
 
-if __name__ == "__main__":
+
+
+def main():
     mid = NormalizedMidiFile("/home/mark/Documents/Barcarolle in F sharp Major.mid")
-    wwts_globals.dump_msgs(mid, 100)
+    wwts_globals.dump_msgs(mid, 25)
+
+if __name__ == "__main__":
+    main()
