@@ -1,6 +1,6 @@
 import mido
 import numpy as np
-from wwts_globals import TICKS_PER_BEAT, KEY_SIGNATURES
+import wwts_globals
 
 
 class MidiFileNormalizer:
@@ -10,7 +10,11 @@ class MidiFileNormalizer:
 
         self.filename = filename
 
-        self.tick_transposer_coef = 1
+        self.note_distribution = np.zeros((128,))
+        self.keysig_distribution = np.zeros((12,))
+        self.original_keysig = -1
+
+        self.tick_transpose_coef = 1
         self.note_transpose_interval = 0
 
         if do_normalize:
@@ -21,67 +25,59 @@ class MidiFileNormalizer:
 
         midi_file = mido.MidiFile(self.filename)
 
-        self.tick_transposer_coef = TICKS_PER_BEAT / midi_file.ticks_per_beat
-        self.note_transpose_interval = MidiFileNormalizer.get_note_transpose_interval(midi_file)
+        self.tick_transpose_coef = wwts_globals.TICKS_PER_BEAT / midi_file.ticks_per_beat
+
+        self.get_note_distributions(midi_file)
+        self.get_key_signature()
+        self.get_note_transpose_interval()
 
 
-    @staticmethod
-    def get_note_transpose_interval(midi_file):
-        """
-        Gets the transpose interval for a filename from the meta dataframe.
+    def get_note_transpose_interval(self):
 
-        :return: The interval to use to transpose this file to the correct key signature.
-        """
-
-        # get the key signature
-        note_dist = MidiFileNormalizer.get_note_distribution(midi_file)
-        key_sig = MidiFileNormalizer.get_key_signature(note_dist)
-
-        # first transpose based on key signature
-        if key_sig < 6:
-            transpose_interval = -key_sig
+        # first transpose to C based on key signature
+        if self.original_keysig < 6:
+            keysig_transpose_interval = -self.original_keysig
         else:
-            transpose_interval = 12 - key_sig
+            keysig_transpose_interval = 12 - self.original_keysig
+
+        # now transpose it to middle C (C4) based on the most common octave
+        transposed_notes = np.roll(self.note_distribution, keysig_transpose_interval)
+        C_octaves = {i: transposed_notes[i] for i in range(0, 128, 12)}
+        octave_transpose_interval = max(C_octaves, key=lambda i: C_octaves[i])
+
+        self.note_transpose_interval = keysig_transpose_interval + octave_transpose_interval
 
 
-        return transpose_interval
 
-
-    @staticmethod
-    def get_note_distribution(midi_file):
-
-        note_distribution = np.zeros((12,))
+    def get_note_distributions(self, midi_file):
 
         for msg in midi_file:
 
             if msg.type == "note_on":
+
                 if not msg.velocity:  # skip if it's a note off (velocity = 0)
                     continue
+
                 if msg.channel != 10:  # skip channel 10 (drums)
-                    note_distribution[msg.note % 12] += 1
+                    self.note_distribution[msg.note] += 1
+                    self.keysig_distribution[msg.note % 12] += 1
 
-        return note_distribution
 
+    def get_key_signature(self):
 
-    @staticmethod
-    def get_key_signature(note_dist):
-        """
-        Uses the note distribution in the meta dataframe to determine a filename's key signature
-        :param note_dist: Distribution of notes as per music_notes
-        :return: The index of key_signatures that is the best match.
-        """
-
-        top_7_notes = set(np.argsort(note_dist)[::-1][:7])
+        # find the 7 most common notes
+        top_7_notes = set(np.argsort(self.keysig_distribution)[::-1][:7])
 
         best_match = -1
         best_match_set_difference = 100
 
-        for i in range(len(KEY_SIGNATURES)):
+        # loop through each key signature and find the one that matches best
+        for i in range(len(wwts_globals.KEY_SIGNATURES)):
 
             # find number of uncommon notes
-            set_difference = len(set(KEY_SIGNATURES[i]) - top_7_notes)
+            set_difference = len(set(wwts_globals.KEY_SIGNATURES[i]) - top_7_notes)
 
-            # if this one is better than the last, save it
+            # if this one has less mismatched notes, set it as the best match so far
             if set_difference < best_match_set_difference:
                 best_match = i
                 best_match_set_difference = set_difference
@@ -90,4 +86,4 @@ class MidiFileNormalizer:
                 if not best_match_set_difference:
                     break
 
-        return best_match
+        self.original_keysig = best_match
