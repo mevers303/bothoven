@@ -209,6 +209,6 @@ def progress_bar(done, total, resolution = 0, text=""):
         stdout.flush()
 
     if i == 100:
-        print("\n")
+        print("\n")   # "\033[F" is up one line with a \r built in
 
     _PROGRESS_BAR_LAST_I = i

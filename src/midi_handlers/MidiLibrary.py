@@ -1,3 +1,8 @@
+# Mark Evers
+# 9/21/18
+# MidiLibrary.py
+# Objects for managing a set of MIDI files.
+
 import os
 import random
 from sklearn.model_selection import train_test_split
