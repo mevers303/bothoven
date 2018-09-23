@@ -1,5 +1,5 @@
 from collections import defaultdict
-from midi_handlers.toolbox.MidiToolbox import MidiTool, MidiToolbox
+from midi_handlers.toolbox.MidiToolbox import MidiTool
 import mido
 
 
@@ -83,9 +83,9 @@ class Type1Converter(MidiTool):
 
 def main():
 
+    from midi_handlers.toolbox.MidiToolbox import MidiToolbox
+
     toolbox = MidiToolbox([Type1Converter])
-
-
     mid = mido.MidiFile("/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/1/1-2-3_ngoi_sao.mid")
     new_mid = toolbox.process_midi_file(mid)
 

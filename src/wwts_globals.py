@@ -16,27 +16,12 @@ MINIMUM_WORKS = 100
 MAXIMUM_WORKS = 120
 
 ###### HYPER PARAMETERS
-# How many threads to use when parsing the MIDI archive?
-MIDI_ARCHIVE_NUM_THREADS = 3
 # How many ticks per beat should each track be converted to?
 TICKS_PER_BEAT = 1024
 # The resolution of music notes
 MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 32  # 128th notes
 # The longest note allowed
 MAXIMUM_NOTE_LENGTH = TICKS_PER_BEAT * 8   # two whole notes
-# Look at the first x notes to train/classify.  MUST BE DIVISIBLE BY 2
-# NUM_STEPS = 3072
-NUM_STEPS = 64  # for n-hot sequence
-# The number of unique features to use in the CountVectorizer.
-TEXT_MAXIMUM_FEATURES = 50000
-# How many midi files to load at once
-BATCH_FILES = 50
-# How many chunks of NUM_STEPS to load
-BATCH_SIZE = 64
-# How many epochs to train for?
-N_EPOCHS = 20
-# Smallest step in a timeseries (in ticks)
-MINIMUM_TIMESERIES_STEP = MINIMUM_NOTE_LENGTH
 
 
 

@@ -1,5 +1,4 @@
-from midi_handlers.toolbox.MidiToolbox import MidiTool, MidiToolbox
-import mido
+from midi_handlers.toolbox.MidiToolbox import MidiTool
 import numpy as np
 import wwts_globals
 
@@ -86,9 +85,10 @@ class MiddleCTransposer(MidiTool):
 
 def main():
 
+    from midi_handlers.toolbox.MidiToolbox import MidiTool, MidiToolbox
+    import mido
+
     toolbox = MidiToolbox([MiddleCTransposer])
-
-
     mid = mido.MidiFile("/home/mark/Documents/Barcarolle in F sharp Major.mid")
     new_mid = toolbox.process_midi_file(mid)
 
