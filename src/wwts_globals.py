@@ -82,6 +82,7 @@ def dump_tracks(midi_file):
     for i, track in enumerate(midi_file.tracks):
         print(str(i).rjust(2), ": ", track, sep="")
 
+
 def dump_msgs(mido_object, limit=25):
     """
     Prints all the messages contained in a track or midi file.  The delta time is in seconds when you give it a
@@ -96,6 +97,7 @@ def dump_msgs(mido_object, limit=25):
             return
         print(str(i).rjust(4), ": ", msg, sep="")
 
+
 def midi_to_music(midi_note):
     """
     Returns a tuple of (<note name>, octave).
@@ -109,6 +111,7 @@ def midi_to_music(midi_note):
 
     return music_note, octave
 
+
 def midi_to_string(midi_note):
     """
     Converts a MIDI note to a string of it's name and octave (like C4 for middle C).
@@ -118,6 +121,7 @@ def midi_to_string(midi_note):
     """
     note = midi_to_music(midi_note)
     return note[0] + str(note[1])
+
 
 def get_key_signature(note_dist):
     """
@@ -149,6 +153,7 @@ def get_key_signature(note_dist):
 
     return best_match
 
+
 def bin_note_duration(duration):
     """
     Rounds the duration to the closest value in DURATION_BINS
@@ -176,6 +181,19 @@ def bin_note_duration(duration):
 
     # this should never execute but just for sanity's sake
     return best_match
+
+
+def to_reltime(messages):
+    """
+        Convert messages to relative time.
+    """
+
+    now = 0
+
+    for msg in messages:
+        delta = msg.time - now
+        yield msg.copy(time=delta)
+        now = msg.time
 
 
 

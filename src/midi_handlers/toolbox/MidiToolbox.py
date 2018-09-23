@@ -5,20 +5,35 @@ import mido
 
 class MidiToolbox:
 
-    def __init__(self, toolset = deque()):
+    def __init__(self, tool_list):
 
-        self.tools = toolset
+        self.tool_list = tool_list
+        self.tools = deque()
         self.do_prerun = reduce(lambda result, tool: result and tool.do_prerun, self.tools)
 
 
-    def add_tool(self, tool):
+    def build_tools(self):
 
-        if tool.priority == "first":
-            self.tools.append(tool)
-        elif tool.priority == "last":
-            self.tools.appendleft(tool)
-        else:
-            raise ValueError("MidiTool.priority must be \"first\" or \"last\".")
+        self.tools.clear()
+
+        for tool_type in self.tool_list:
+
+            tool = tool_type()
+
+            if tool.priority == "first":
+                self.tools.append(tool)
+            elif tool.priority == "last":
+                self.tools.appendleft(tool)
+            else:
+                raise ValueError("MidiTool.priority must be \"first\" or \"last\".")
+
+
+    def process_midi_file(self, mid):
+
+        self.build_tools()
+
+        if self.do_prerun:
+            self.prerun(mid)
 
 
     def prerun(self, mid):
@@ -36,12 +51,6 @@ class MidiToolbox:
                     tool.prerun_message_event(msg)
 
 
-    def process_midi_file(self, mid):
-
-        if self.do_prerun:
-            self.prerun(mid)
-
-
 
 class MidiTool:
 
@@ -56,7 +65,7 @@ class MidiTool:
     def prerun_track_event(self, track):
         pass
 
-    def prerun_message_event(self, track):
+    def prerun_message_event(self, msg):
         pass
 
     def file_event(self, mid):
@@ -65,5 +74,8 @@ class MidiTool:
     def track_event(self, track):
         pass
 
-    def message_event(self, track):
+    def message_event(self, msg):
+        pass
+
+    def post_process(self):
         pass
