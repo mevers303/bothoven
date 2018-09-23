@@ -13,12 +13,14 @@ for root, dirs, files in os.walk("/home/mark/Documents/midi/130000_Pop_Rock_Clas
         filename = os.path.join(root, file)
         try:
             mid = mido.MidiFile(filename)
+        except KeyboardInterrupt as e:
+            raise e
         except:
             continue
 
         if mid.type == 0:
 
-            channels = set([msg.channel for msg in mid if not msg.is_meta])
+            channels = set([msg.channel for msg in mid if not msg.is_meta and msg.type != "sysex"])
 
             if len(channels) > 1:
                 print(len(channels), "channels:", filename)

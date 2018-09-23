@@ -56,6 +56,8 @@ class Type1Converter(MidiTool):
 
         if msg.type == "channel_prefix":
             self.meta_channel = msg.channel
+        elif msg.type == "end_of_track":
+            return
         elif msg.is_meta:
             self.new_tracks[self.meta_channel].append(msg.copy(time=self.absolute_time))
         elif msg.type == "sysex":
@@ -72,7 +74,7 @@ class Type1Converter(MidiTool):
         self.mid.tracks.clear()
 
         for channel, track in sorted(self.new_tracks.items(), key=lambda x: x[0]):
-            self.mid.tracks.append(mido.MidiTrack(mido.midifiles.tracks.fix_end_of_track(mido.midifiles.tracks._to_reltime(track))))
+            self.mid.tracks.append( mido.MidiTrack(mido.midifiles.tracks._to_reltime(track)) + [mido.MetaMessage("end_of_track", time=0)] )
 
         self.mid.type = 1
 
@@ -87,7 +89,7 @@ def main():
     mid = mido.MidiFile("/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/1/1-2-3_ngoi_sao.mid")
     new_mid = toolbox.process_midi_file(mid)
 
-    # new_mid.print_tracks()
+    new_mid.print_tracks()
 
     for original, new in zip(mid, new_mid):
         if original.time != new.time:
