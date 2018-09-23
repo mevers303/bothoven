@@ -45,7 +45,8 @@ class MidiLibrary:
                 for file in files:
 
                     full_path = os.path.join(root, file)
-                    if not (file.lower().endswith(".mid") or file.lower().endswith(".midi")):
+                    filename = file.lower()
+                    if not filename.endswith(".mid") or not filename.endswith(".midi") or not filename.endswith(".smf"):
                         print("Unknown file:", full_path)
                         continue
 

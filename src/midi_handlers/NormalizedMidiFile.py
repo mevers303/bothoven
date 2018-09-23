@@ -120,7 +120,7 @@ class NormalizedMidiFile(mido.MidiFile):
 
 def main():
     mid = NormalizedMidiFile("/home/mark/Documents/Barcarolle in F sharp Major.mid")
-    wwts_globals.dump_msgs(mid, 25)
+    wwts_globals.dump_msgs(mid.tracks[1], 50)
 
 if __name__ == "__main__":
     main()
