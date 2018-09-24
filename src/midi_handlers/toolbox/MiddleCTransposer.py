@@ -35,7 +35,16 @@ class MiddleCTransposer(MidiTool):
     def message_event(self, msg):
 
         if msg.type == "note_on" or msg.type == "note_off":
-            msg.note = msg.note + self.note_transpose_interval
+
+            note = msg.note
+            note += self.note_transpose_interval
+
+            while note > 127:
+                note -= 12
+            while note < 0:
+                note += 12
+
+            msg.note = note
 
 
     def get_key_signature(self):
