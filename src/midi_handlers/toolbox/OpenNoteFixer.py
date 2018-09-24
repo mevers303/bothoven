@@ -17,7 +17,7 @@ class OpenNoteFixer(MidiTool):
 
     def track_event(self, track):
 
-        self.open_notes = set()
+        self.open_notes = {}
         self.current_track = track
         self.current_pos = 0
         self.cum_time = 0
@@ -33,17 +33,18 @@ class OpenNoteFixer(MidiTool):
         if msg.type == "note_on" and msg.velocity:
 
             if msg.note in self.open_notes:
-                self.current_track.insert(self.current_pos, msg.copy(type="note_off", velocity=0))
+                new_msg = mido.Message(type="note_off", channel=msg.channel, note=msg.note, velocity=0, time=msg.time)
+                self.current_track.insert(self.current_pos, new_msg)
                 msg.time = 0
-                self.open_notes.remove(msg.note)
+                del self.open_notes[msg.note]
 
             else:
-                self.open_notes.add(msg.note)
+                self.open_notes[msg.note] = msg.channel
 
         elif msg.type == "note_off" or (msg.type == "note_on" and not msg.velocity):
 
             if msg.note in self.open_notes:
-                self.open_notes.remove(msg.note)
+                del self.open_notes[msg.note]
             else:
                 self.cum_time += msg.time
                 self.to_remove.append(msg)
@@ -54,14 +55,14 @@ class OpenNoteFixer(MidiTool):
                 this_time = msg.time
                 last_open_note = 0
 
-                for open_note in self.open_notes:
-                    self.current_track.insert(self.current_pos, mido.Message(type="note_off", note=open_note, velocity=0, time=this_time))
+                for open_note, channel in self.open_notes.items():
+                    self.current_track.insert(self.current_pos, mido.Message(type="note_off", channel=channel, note=open_note, velocity=0, time=this_time))
                     last_open_note = open_note
                     if this_time:
                         this_time = 0
 
                 # remove the last open_note in the set because it will be skipped when the messages loop continues
-                self.open_notes.remove(last_open_note)
+                del self.open_notes.[last_open_note]
 
         self.current_pos += 1
 
@@ -97,6 +98,8 @@ def main():
 
             toolbox = MidiToolbox([OpenNoteFixer])
             new_mid = toolbox.process_midi_file(mid)
+
+            print("Done ->", filename)
 
 
 if __name__ == "__main__":
