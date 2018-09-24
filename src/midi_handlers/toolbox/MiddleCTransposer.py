@@ -26,7 +26,7 @@ class MiddleCTransposer(MidiTool):
                 self.keysig_distribution[msg.note % 12] += 1
 
 
-    def prerun_post_process(self):
+    def prerun_post_process(self, mid):
 
         self.get_key_signature()
         self.get_note_transpose_interval()

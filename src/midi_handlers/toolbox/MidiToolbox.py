@@ -1,7 +1,6 @@
 import copy
 from collections import deque
 from functools import reduce
-import mido
 
 
 class MidiToolbox:
@@ -28,7 +27,7 @@ class MidiToolbox:
             else:
                 raise ValueError("MidiTool.priority must be \"first\" or \"last\".")
 
-        self.do_prerun = reduce(lambda result, tool: result or tool.do_prerun, self.tools, self.tools[0].do_prerun)
+        self.do_prerun = reduce(lambda result, this_tool: result or this_tool.do_prerun, self.tools, self.tools[0].do_prerun)
 
 
     def process_midi_file(self, original_mid):
@@ -102,7 +101,7 @@ class MidiTool:
     def prerun_post_track_event(self, track):
         pass
 
-    def prerun_post_process(self):
+    def prerun_post_process(self, mid):
         pass
 
     def file_event(self, mid):
@@ -117,5 +116,5 @@ class MidiTool:
     def post_track_event(self, track):
         pass
 
-    def post_process(self):
+    def post_process(self, mid):
         pass

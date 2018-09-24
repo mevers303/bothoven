@@ -19,7 +19,7 @@ class ToolTemplate(MidiTool):
     def prerun_post_track_event(self, track):
         pass
 
-    def prerun_post_process(self):
+    def prerun_post_process(self, mid):
         pass
 
     def file_event(self, mid):
@@ -34,7 +34,7 @@ class ToolTemplate(MidiTool):
     def post_track_event(self, track):
         pass
 
-    def post_process(self):
+    def post_process(self, mid):
         pass
 
 

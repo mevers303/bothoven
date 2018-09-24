@@ -10,8 +10,6 @@ class Type1Converter(MidiTool):
 
         super().__init__(priority="last", do_prerun=False)
 
-        self.mid = None
-
         self.conversion_necessary = False
         self.new_mid = mido.MidiFile(type=1)  # new mido to hold new file
         self.new_tracks = defaultdict(mido.MidiTrack)  # dict to hold a track for each channel
@@ -31,7 +29,6 @@ class Type1Converter(MidiTool):
                 raise TypeError("This MIDI file is type 0 but it has more than one track???")
 
             self.conversion_necessary = True
-            self.mid = mid
 
         elif mid.type == 2:
             raise NotImplementedError("Type 2 MIDI files are not supported!")
@@ -66,17 +63,17 @@ class Type1Converter(MidiTool):
             self.new_tracks[msg.channel].append(msg.copy(time=self.absolute_time))
 
 
-    def post_process(self):
+    def post_process(self, mid):
 
         if not self.conversion_necessary:
             return
 
-        self.mid.tracks.clear()
+        mid.tracks.clear()
 
         for channel, track in sorted(self.new_tracks.items(), key=lambda x: x[0]):
-            self.mid.tracks.append( mido.MidiTrack(mido.midifiles.tracks._to_reltime(track)) + [mido.MetaMessage("end_of_track", time=0)] )
+            mid.tracks.append( mido.MidiTrack(mido.midifiles.tracks._to_reltime(track)) + [mido.MetaMessage("end_of_track", time=0)] )
 
-        self.mid.type = 1
+        mid.type = 1
 
 
 
