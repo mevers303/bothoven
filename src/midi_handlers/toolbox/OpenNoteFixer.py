@@ -72,7 +72,7 @@ class OpenNoteFixer(MidiTool):
 
 
     def post_track_event(self, track):
-        for position in self.to_remove:
+        for position in self.to_remove[::-1]:
             del track[position]
 
 
@@ -115,26 +115,28 @@ def main():
             toolbox = MidiToolbox([OpenNoteFixer])
             new_mid = toolbox.process_midi_file(mid)
 
-            print(filename, sum([len(track) for track in mid.tracks]), "->", sum([len(track) for track in new_mid.tracks]))
+            print(filename)
 
-            for old_track, new_track in zip(mid.tracks, new_mid.tracks):
-
-                i = 0
-
-                while True:
-
-                    if i >= len(old_track) or i >= len(new_track):
-                        break
-
-                    if old_track[i].type != new_track[i].type:
-                        print("=" * 80)
-                        print("=" * 80)
-                        for j in range(i - 3, i + 15):
-                            print(j, old_track[j], "->", new_track[j])
-
-                    i += 1
-
-            print("\n\n")
+            # print(filename, sum([len(track) for track in mid.tracks]), "->", sum([len(track) for track in new_mid.tracks]))
+            #
+            # for old_track, new_track in zip(mid.tracks, new_mid.tracks):
+            #
+            #     i = 0
+            #
+            #     while True:
+            #
+            #         if i >= len(old_track) or i >= len(new_track):
+            #             break
+            #
+            #         if old_track[i].type != new_track[i].type:
+            #             print("=" * 80)
+            #             print("=" * 80)
+            #             for j in range(i - 3, i + 15):
+            #                 print(j, old_track[j], "->", new_track[j])
+            #
+            #         i += 1
+            #
+            # print("\n\n")
 
 
 
