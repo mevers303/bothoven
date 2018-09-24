@@ -81,21 +81,21 @@ class Type1Converter(MidiTool):
 
 
 
-def main():
-
-    from midi_handlers.toolbox.MidiToolbox import MidiToolbox
-
-    toolbox = MidiToolbox([Type1Converter])
-    mid = mido.MidiFile("/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/1/1-2-3_ngoi_sao.mid")
-    new_mid = toolbox.process_midi_file(mid)
-
-    new_mid.print_tracks()
-
-    for original, new in zip(mid, new_mid):
-        if original.time != new.time:
-            print("Oh damn.")
-
-    print("Done... ?")
-
-if __name__ == "__main__":
-    main()
+# def main():
+#
+#     from midi_handlers.toolbox.MidiToolbox import MidiToolbox
+#
+#     toolbox = MidiToolbox([Type1Converter])
+#     mid = mido.MidiFile("/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/1/1-2-3_ngoi_sao.mid")
+#     new_mid = toolbox.process_midi_file(mid)
+#
+#     new_mid.print_tracks()
+#
+#     for original, new in zip(mid, new_mid):
+#         if original.time != new.time:
+#             print("Oh damn.")
+#
+#     print("Done... ?")
+#
+# if __name__ == "__main__":
+#     main()

@@ -83,23 +83,23 @@ class MiddleCTransposer(MidiTool):
 
 
 
-def main():
-
-    from midi_handlers.toolbox.MidiToolbox import MidiTool, MidiToolbox
-    import mido
-
-    toolbox = MidiToolbox([MiddleCTransposer])
-    mid = mido.MidiFile("/home/mark/Documents/Barcarolle in F sharp Major.mid")
-    new_mid = toolbox.process_midi_file(mid)
-
-    # new_mid.print_tracks()
-
-    # for original, new in zip(mid, new_mid):
-    #     if original.type == "note_on" or original.type == "note_off":
-    #         if original.note != new.note:
-    #             print(original, "->", new)
-
-    print("Done... ?")
-
-if __name__ == "__main__":
-    main()
+# def main():
+#
+#     from midi_handlers.toolbox.MidiToolbox import MidiTool, MidiToolbox
+#     import mido
+#
+#     toolbox = MidiToolbox([MiddleCTransposer])
+#     mid = mido.MidiFile("/home/mark/Documents/Barcarolle in F sharp Major.mid")
+#     new_mid = toolbox.process_midi_file(mid)
+#
+#     # new_mid.print_tracks()
+#
+#     # for original, new in zip(mid, new_mid):
+#     #     if original.type == "note_on" or original.type == "note_off":
+#     #         if original.note != new.note:
+#     #             print(original, "->", new)
+#
+#     print("Done... ?")
+#
+# if __name__ == "__main__":
+#     main()
