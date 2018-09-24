@@ -13,10 +13,9 @@ import wwts_globals
 
 class FlatMidiLibrary:
 
-    def __init__(self, base_dir, toolbox):
+    def __init__(self, base_dir):
 
         self.base_dir = base_dir
-        self.toolbox = toolbox
         self.filenames = None
         self.filenames_count = 0
         self.mids = None
@@ -50,9 +49,13 @@ class FlatMidiLibrary:
         done = 0
 
         for filename in self.filenames:
-            self.mids.append(mido.MidiFile(filename))
-            done += 1
-            wwts_globals.progress_bar(done, self.filenames_count)
+            try:
+                self.mids.append(mido.MidiFile(filename))
+            except:
+                pass
+            finally:
+                done += 1
+                wwts_globals.progress_bar(done, self.filenames_count)
 
 
 
@@ -136,3 +139,15 @@ class MidiLibrarySplit(MidiLibrary):
     def split_files(self):
 
         self.filenames_train, self.filenames_test, self.labels_train, self.labels_test = train_test_split(self.filenames, self.labels, stratify=self.labels)
+
+
+
+
+
+def main():
+
+    lib = FlatMidiLibrary("midi/bach_cleaned")
+    lib.load()
+
+if __name__ == "__main__":
+    main()
