@@ -56,7 +56,7 @@ class MidiToolbox:
                 tool.post_track_event(track)
 
         for tool in self.tools:
-            tool.post_process()
+            tool.post_process(mid)
 
         return mid
 
@@ -79,7 +79,7 @@ class MidiToolbox:
                 tool.prerun_post_track_event(track)
 
         for tool in self.tools:
-            tool.prerun_post_process()
+            tool.prerun_post_process(mid)
 
 
 class MidiTool:
