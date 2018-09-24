@@ -46,8 +46,25 @@ def main():
 
     done = 0
     for filename in filenames:
-        mid = toolbox.process_midi_file(mido.MidiFile(filename))
-        mid.save(filename.replace("midi/classical/Bach/", "midi/bach_cleaned/"))
+
+        try:
+            mid = toolbox.process_midi_file(mido.MidiFile(filename))
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
+        except Exception as e:
+            print("\nThere was an error reading", filename)
+            print(e)
+            continue
+
+        try:
+            mid.save("midi/bach_cleaned/" + os.path.basename(filename))
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
+        except Exception as e:
+            print("\nThere was an error saving", mid.save(os.path.basename(filename)))
+            print(e)
+            continue
+
         done += 1
         progress_bar(done, filenames_count)
 
