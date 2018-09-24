@@ -23,7 +23,7 @@ class TickTransposer(MidiTool):
     def message_event(self, msg):
 
         if hasattr(msg, "time"):
-            msg.time = np.round(msg.time * self.tick_transpose_coef)
+            msg.time = np.int(msg.time * self.tick_transpose_coef)
 
 
 

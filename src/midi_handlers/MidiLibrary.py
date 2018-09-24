@@ -47,10 +47,12 @@ class FlatMidiLibrary:
     def load(self):
 
         self.mids = []
+        done = 0
 
         for filename in self.filenames:
             self.mids.append(mido.MidiFile(filename))
-            wwts_globals.progress_bar(i, )
+            done += 1
+            wwts_globals.progress_bar(done, self.filenames_count)
 
 
 
