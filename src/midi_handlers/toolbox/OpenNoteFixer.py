@@ -67,6 +67,7 @@ class OpenNoteFixer(MidiTool):
 
                 # remove the last open_note in the set because it will be skipped when the messages loop continues
                 self.remove_from_open_notes(last_open_note, last_channel)
+                msg.time = 0
 
         self.current_pos += 1
 
@@ -155,11 +156,13 @@ def main2():
                       mido.Message(type="note_on", channel=0, note=100, velocity=0, time=10),
                       mido.Message(type="note_on", channel=0, note=100, velocity=0, time=10),
                       mido.Message(type="note_on", channel=0, note=100, velocity=5, time=10),
-                      mido.Message(type="note_on", channel=0, note=100, velocity=0, time=10)
+                      mido.Message(type="note_on", channel=0, note=100, velocity=0, time=10),
+                      mido.Message(type="note_on", channel=0, note=100, velocity=6, time=10),
+                      mido.MetaMessage(type="end_of_track", time=10)
                   ])
 
     mid = mido.MidiFile()
-    mid.tracks = [track, ]
+    mid.tracks = [track]
 
     toolbox = MidiToolbox([OpenNoteFixer, NoteOnToNoteOff])
     new_mid = toolbox.process_midi_file(mid)
@@ -170,4 +173,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main()
+    main2()

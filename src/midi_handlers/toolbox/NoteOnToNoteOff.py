@@ -5,7 +5,7 @@ class NoteOnToNoteOff(MidiTool):
 
     def __init__(self):
 
-        super().__init__(priority = "first", do_prerun = False)
+        super().__init__(priority="first", do_prerun=False)
 
         self.current_track = None
         self.current_pos = 0
