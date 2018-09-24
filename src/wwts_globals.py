@@ -5,6 +5,7 @@
 
 from sys import stdout
 from numpy import argsort
+from time import time
 
 
 
@@ -182,36 +183,38 @@ def to_reltime(messages):
 
 
 
-_PROGRESS_BAR_LAST_I = 100
-def progress_bar(done, total, resolution = 0, text=""):
+_progress_bar_last_time = 0
+def progress_bar(done, total, resolution=0.125, text=""):
     """
     Prints a progress bar to stdout.
-
     :param done: Number of items complete
     :param total: Total number if items
-    :param resolution: How often to update the progress bar (in percentage).  0 will update each time
-    :param text: Text to display at the end.
+    :param resolution: How often to update the progress bar (in seconds).
     :return: None
     """
 
-    global _PROGRESS_BAR_LAST_I
-    # percentage done
-    i = int(done / total * 100)
-    if i == _PROGRESS_BAR_LAST_I and resolution:
+    global _progress_bar_last_time
+
+    time_now = time()
+    if time_now - _progress_bar_last_time < resolution and done < total:
         return
 
-    # if it's some multiple of resolution
-    if (not resolution) or (not i % resolution) or (i == 100):
-        stdout.write('\r')
-        # print the progress bar
-        stdout.write("[{}]{}%".format(("-" * int(i / 2) + (">" if i < 100 else "")).ljust(50), str(i).rjust(4)))
-        # print the text figures
-        stdout.write("({}/{})".format(done, total).rjust(15))
-        if text:
-            stdout.write(" " + text)
-        stdout.flush()
+    # percentage done
+    i = int(done / total * 100)
+
+    stdout.write('\r')
+    # print the progress bar
+    stdout.write("[{}]{}%".format(("-" * int(i / 2) + (">" if i < 100 else "")).ljust(50), str(i).rjust(4)))
+    # print the text figures
+    stdout.write(" ({}/{})".format(done, total))
+    if text:
+        stdout.write(" " + text)
+    stdout.flush()
 
     if i == 100:
-        print("\n")   # "\033[F" is up one line with a \r built in
+        # print("\n")
+        stdout.write('\r')
+        stdout.write(' ' * 120)
+        stdout.write('\r')
 
-    _PROGRESS_BAR_LAST_I = i
+    _progress_bar_last_time = time_now

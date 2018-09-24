@@ -3,10 +3,57 @@
 # MidiLibrary.py
 # Objects for managing a set of MIDI files.
 
+import mido
 import os
 import random
 from sklearn.model_selection import train_test_split
 import wwts_globals
+
+
+
+class FlatMidiLibrary:
+
+    def __init__(self, base_dir, toolbox):
+
+        self.base_dir = base_dir
+        self.toolbox = toolbox
+        self.filenames = None
+        self.filenames_count = 0
+        self.mids = None
+
+        self.get_filenames()
+
+
+    def get_filenames(self):
+
+        self.filenames = []
+
+        for root, dirs, files in os.walk(self.base_dir):
+
+            for file in files:
+
+                full_path = os.path.join(root, file)
+                filename = file.lower()
+                if not (filename.endswith(".mid") or filename.endswith(".midi") or filename.endswith(".smf")):
+                    print("Unknown file:", full_path)
+                    continue
+
+                self.filenames.append(full_path)
+
+        self.filenames_count = len(self.filenames)
+        print("Found", self.filenames_count, "in", self.base_dir)
+
+
+    def load(self):
+
+        self.mids = []
+
+        for filename in self.filenames:
+            self.mids.append(mido.MidiFile(filename))
+            wwts_globals.progress_bar(i, )
+
+
+
 
 
 
