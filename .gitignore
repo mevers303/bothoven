@@ -1,3 +1,5 @@
 .idea/
 midi
 src/midi_handlers/toolbox/__pycache__/
+src/midi_handlers/__pycache__/
+src/__pycache__/
