@@ -16,6 +16,9 @@ class ToolTemplate(MidiTool):
     def prerun_message_event(self, msg):
         pass
 
+    def prerun_post_track_event(self, track):
+        pass
+
     def prerun_post_process(self):
         pass
 
@@ -26,6 +29,9 @@ class ToolTemplate(MidiTool):
         pass
 
     def message_event(self, msg):
+        pass
+
+    def post_track_event(self, track):
         pass
 
     def post_process(self):

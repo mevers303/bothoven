@@ -91,6 +91,8 @@ class OpenNoteFixer(MidiTool):
             del self.open_notes[note]
 
 
+
+
 def main():
 
     from midi_handlers.toolbox.MidiToolbox import MidiToolbox
