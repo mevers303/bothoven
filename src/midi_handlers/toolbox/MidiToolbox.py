@@ -17,7 +17,7 @@ class MidiToolbox:
 
         self.tools.clear()
 
-        for tool_type in self.tool_list:
+        for tool_type in self.tool_list[::-1]:
 
             tool = tool_type()
 
