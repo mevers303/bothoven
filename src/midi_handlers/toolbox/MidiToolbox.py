@@ -53,6 +53,9 @@ class MidiToolbox:
                 for tool in self.tools:
                     tool.message_event(msg)
 
+            for tool in self.tools:
+                tool.post_track_event(track)
+
         for tool in self.tools:
             tool.post_process()
 
@@ -72,6 +75,9 @@ class MidiToolbox:
             for msg in track:
                 for tool in self.tools:
                     tool.prerun_message_event(msg)
+
+            for tool in self.tools:
+                tool.prerun_post_track_event(track)
 
         for tool in self.tools:
             tool.prerun_post_process()
@@ -93,6 +99,9 @@ class MidiTool:
     def prerun_message_event(self, msg):
         pass
 
+    def prerun_post_track_event(self, track):
+        pass
+
     def prerun_post_process(self):
         pass
 
@@ -103,6 +112,9 @@ class MidiTool:
         pass
 
     def message_event(self, msg):
+        pass
+
+    def post_track_event(self, track):
         pass
 
     def post_process(self):
