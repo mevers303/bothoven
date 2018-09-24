@@ -9,9 +9,6 @@ class ToolTemplate(MidiTool):
         self.first_note_delay = 999999
 
 
-    def prerun_file_event(self, mid):
-        pass
-
     def prerun_track_event(self, track):
 
         abs_time = 0
@@ -20,27 +17,25 @@ class ToolTemplate(MidiTool):
             abs_time += msg.time
 
             if msg.type == "note_on":
-                if abs_time <
 
+                if abs_time < self.first_note_delay:
+                    self.first_note_delay = abs_time
 
-    def prerun_message_event(self, msg):
+                break
 
-
-
-    def prerun_post_process(self):
-        pass
-
-    def file_event(self, mid):
-        pass
 
     def track_event(self, track):
-        pass
 
-    def message_event(self, msg):
-        pass
+        remaining_difference = self.first_note_delay
 
-    def post_process(self):
-        pass
+        for msg in track:
+
+            if not remaining_difference:
+                break
+
+            msg_time = msg.time
+            msg.time = msg.time - remaining_difference if msg.time > remaining_difference else 0
+            remaining_difference -= msg_time
 
 
 
