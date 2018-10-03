@@ -40,7 +40,7 @@ def main():
     filenames_count = len(filenames)
     print("Found", filenames_count, "in", base_dir)
 
-    tool_list = [TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, NoteOnToNoteOff, Type1Converter]
+    tool_list = [NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, Type1Converter]
     toolbox = MidiToolbox(tool_list)
     print("Toolbox loaded")
 
@@ -64,9 +64,24 @@ def main():
             print("\nThere was an error saving", mid.save(os.path.basename(filename)))
             print(e)
             continue
+        finally:
+            done += 1
+            progress_bar(done, filenames_count)
 
-        done += 1
-        progress_bar(done, filenames_count)
+
+def main2():
+
+    filename = "midi/test.mid"
+
+    # tool_list = [TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, NoteOnToNoteOff, Type1Converter]
+    tool_list = [NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, Type1Converter]
+    toolbox = MidiToolbox(tool_list)
+
+    mid = mido.MidiFile(filename)
+    new_mid = toolbox.process_midi_file(mid)
+    new_mid.save("midi/output.mid")
+
+
 
 if __name__ == "__main__":
     main()

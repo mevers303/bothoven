@@ -30,7 +30,7 @@ class RemoveEmptySpaceBefore(MidiTool):
 
         for msg in track:
 
-            if not remaining_difference:
+            if remaining_difference < 0:
                 break
 
             msg_time = msg.time

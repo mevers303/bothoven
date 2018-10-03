@@ -18,9 +18,10 @@ MAXIMUM_WORKS = 120
 
 ###### HYPER PARAMETERS
 # How many ticks per beat should each track be converted to?
-TICKS_PER_BEAT = 1024
+TICKS_PER_BEAT = 1920
 # The resolution of music notes
-MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 32  # 128th notes
+MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 2**5  # 128th notes
+MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**4  # 128th note triplets
 # The longest note allowed
 MAXIMUM_NOTE_LENGTH = TICKS_PER_BEAT * 8   # two whole notes
 

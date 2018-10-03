@@ -16,6 +16,9 @@ class MidiToolbox:
 
         self.tools.clear()
 
+        if not len(self.tool_list):
+            return
+
         for tool_type in self.tool_list[::-1]:
 
             tool = tool_type()
