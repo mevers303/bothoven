@@ -6,8 +6,10 @@ from midi_handlers.toolbox.MiddleCTransposer import MiddleCTransposer
 from midi_handlers.toolbox.MidiToolbox import MidiToolbox
 from midi_handlers.toolbox.NoteOnToNoteOff import NoteOnToNoteOff
 from midi_handlers.toolbox.OpenNoteFixer import OpenNoteFixer
+from midi_handlers.toolbox.Quantizer import Quantizer
 from midi_handlers.toolbox.RemoveEmptySpaceBefore import RemoveEmptySpaceBefore
 from midi_handlers.toolbox.TickTransposer import TickTransposer
+from midi_handlers.toolbox.Type0Converter import Type0Converter
 from midi_handlers.toolbox.Type1Converter import Type1Converter
 from wwts_globals import progress_bar
 
@@ -40,7 +42,7 @@ def main():
     filenames_count = len(filenames)
     print("Found", filenames_count, "in", base_dir)
 
-    tool_list = [NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, Type1Converter]
+    tool_list = [Quantizer, NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, Type1Converter]
     toolbox = MidiToolbox(tool_list)
     print("Toolbox loaded")
 
@@ -74,7 +76,7 @@ def main2():
     filename = "midi/test.mid"
 
     # tool_list = [TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, NoteOnToNoteOff, Type1Converter]
-    tool_list = [NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, Type1Converter]
+    tool_list = [Type1Converter, Type0Converter, Quantizer, NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer]
     toolbox = MidiToolbox(tool_list)
 
     mid = mido.MidiFile(filename)
