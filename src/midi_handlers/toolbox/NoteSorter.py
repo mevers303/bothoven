@@ -2,7 +2,7 @@ import wwts_globals
 from midi_handlers.toolbox.MidiToolbox import MidiTool
 
 
-class Quantizer(MidiTool):
+class NoteSorter(MidiTool):
 
     def __init__(self):
 

@@ -42,7 +42,7 @@ def main():
     filenames_count = len(filenames)
     print("Found", filenames_count, "in", base_dir)
 
-    tool_list = [Quantizer, NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer, Type1Converter]
+    tool_list = [Type1Converter, Type0Converter, Quantizer, NoteOnToNoteOff, TickTransposer, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer]
     toolbox = MidiToolbox(tool_list)
     print("Toolbox loaded")
 
@@ -86,4 +86,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main()
+    main2()
