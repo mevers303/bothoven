@@ -16,7 +16,6 @@ class Quantizer(MidiTool):
             self.quantize_track(track)
 
 
-
     @staticmethod
     def quantize_x(x, resolution):
 
@@ -24,7 +23,6 @@ class Quantizer(MidiTool):
         decimal_part = 1 - decimal_part if decimal_part > 0.5 else -decimal_part
 
         return int(round(x + (decimal_part * resolution)))
-
 
 
     def quantize_track(self, track):
@@ -46,7 +44,7 @@ class Quantizer(MidiTool):
             quantized_abs_time = quantized_msg_abs_time
 
 
-#
+
 # def main():
 #
 #     from midi_handlers.toolbox.MidiToolbox import MidiToolbox
