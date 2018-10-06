@@ -1,5 +1,7 @@
+from collections import defaultdict
 import wwts_globals
 from midi_handlers.toolbox.MidiToolbox import MidiTool
+import mido
 
 
 class NoteSorter(MidiTool):
@@ -8,65 +10,75 @@ class NoteSorter(MidiTool):
 
         super().__init__(priority="last", do_prerun=False)
 
+        self.abs_time = 0
+        self.notes = defaultdict(list)
+
+
+    def track_event(self, track):
+
+        self.abs_time = 0
+        self.notes.clear()
+
+
+    def message_event(self, msg):
+
+        self.abs_time += msg.time
+        self.notes[self.abs_time].append(msg)
+
 
     def post_track_event(self, track):
 
-        original_abs_time = 0
-        quantized_abs_time = 0
+        new_track = mido.MidiTrack()
+        last_msg_time = 0
 
-        for msg in track:
-            original_abs_time += msg.time
+        for msg_abs_time, messages in sorted(self.notes.items(), key=lambda x: x[0]):
 
-            duplet_quantized_time = self.quantize_x(original_abs_time, wwts_globals.MINIMUM_NOTE_LENGTH)
-            triplet_quantized_time = self.quantize_x(original_abs_time, wwts_globals.MINIMUM_NOTE_LENGTH_TRIPLETS)
+            # velocity_code = 1 if not hasattr(x, "velocity") else (2 if x.velocity else 0)
+            # note_code = msg.note if hasattr(x, "note") else 0
+            sorted_messages = sorted(messages, key=lambda x: (1 if not hasattr(x, "velocity") else (2 if x.velocity else 0),
+                                                              x.note if hasattr(x, "note") else 0))
 
-            quantized_msg_abs_time = duplet_quantized_time if abs(original_abs_time - duplet_quantized_time) < abs(
-                original_abs_time - triplet_quantized_time) else triplet_quantized_time
-            quantized_msg_delta = quantized_msg_abs_time - quantized_abs_time
+            delta_time = msg_abs_time - last_msg_time
+            new_track.append(sorted_messages[0].copy(time=delta_time))
+            last_msg_time = msg_abs_time
 
-            msg.time = quantized_msg_delta
-            quantized_abs_time = quantized_msg_abs_time
+            for msg in sorted_messages[1:]:
+                new_track.append(msg.copy(time=0))
 
-
-    @staticmethod
-    def quantize_x(x, resolution):
-
-        decimal_part = (x / resolution) % 1
-        decimal_part = 1 - decimal_part if decimal_part > 0.5 else -decimal_part
-
-        return int(round(x + (decimal_part * resolution)))
+        track.clear()
+        track.extend(new_track)
 
 
-#
-# def main():
-#
-#     from midi_handlers.toolbox.MidiToolbox import MidiToolbox
-#     import mido
-#
-#     track = mido.MidiTrack([
-#         mido.MetaMessage('key_signature', key='Ab', time=0),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=1, time=62),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=0, time=62),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=2, time=62),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=0, time=62),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=3, time=41),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=4, time=41),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=0, time=39),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=0, time=35),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=5, time=67),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=0, time=67),
-#         mido.Message(type="note_on", channel=0, note=100, velocity=6, time=167),
-#         mido.MetaMessage(type="end_of_track", time=10)
-#     ])
-#
-#     mid = mido.MidiFile()
-#     mid.tracks = [track]
-#
-#     toolbox = MidiToolbox([Quantizer])
-#     new_mid = toolbox.process_midi_file(mid)
-#
-#     for msg in new_mid.tracks[0]:
-#         print(msg)
-#
-# if __name__ == "__main__":
-#     main()
+def main():
+
+    from midi_handlers.toolbox.MidiToolbox import MidiToolbox
+    import mido
+
+    track = mido.MidiTrack([
+        mido.MetaMessage('key_signature', key='Ab', time=0),
+        mido.Message(type="note_on", channel=0, note=1, velocity=1, time=62),
+        mido.Message(type="note_on", channel=0, note=1, velocity=0, time=62),
+        mido.Message(type="note_on", channel=0, note=2, velocity=2, time=62),
+        mido.Message(type="note_on", channel=0, note=99, velocity=3, time=62),
+        mido.Message(type="note_on", channel=0, note=4, velocity=4, time=0),
+        mido.MetaMessage('key_signature', key='Ab', time=0),
+        mido.Message(type="note_on", channel=0, note=2, velocity=0, time=0),
+        mido.Message(type="note_on", channel=0, note=100, velocity=100, time=0),
+        mido.Message(type="note_on", channel=0, note=100, velocity=0, time=35),
+        mido.Message(type="note_on", channel=0, note=99, velocity=0, time=0),
+        mido.Message(type="note_on", channel=0, note=4, velocity=0, time=0),
+        mido.Message(type="note_on", channel=0, note=100, velocity=6, time=167),
+        mido.MetaMessage(type="end_of_track", time=10)
+    ])
+
+    mid = mido.MidiFile()
+    mid.tracks = [track]
+
+    toolbox = MidiToolbox([NoteSorter])
+    new_mid = toolbox.process_midi_file(mid)
+
+    for msg in new_mid.tracks[0]:
+        print(msg)
+
+if __name__ == "__main__":
+    main()
