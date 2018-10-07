@@ -34,6 +34,7 @@ def create_model():
     _model.add(Dropout(.333))
     _model.add(LSTM(222))
     _model.add(Dropout(.111))
+    _model.add(Dense(units=wwts_globals.NUM_FEATURES))
     _model.compile(loss='mae', optimizer='adam')
     print(_model.summary())
 
