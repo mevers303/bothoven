@@ -1,5 +1,4 @@
 from collections import defaultdict
-import wwts_globals
 from midi_handlers.toolbox.MidiToolbox import MidiTool
 import mido
 
@@ -49,36 +48,38 @@ class NoteSorter(MidiTool):
         track.extend(new_track)
 
 
-def main():
 
-    from midi_handlers.toolbox.MidiToolbox import MidiToolbox
-    import mido
 
-    track = mido.MidiTrack([
-        mido.MetaMessage('key_signature', key='Ab', time=0),
-        mido.Message(type="note_on", channel=0, note=1, velocity=1, time=62),
-        mido.Message(type="note_on", channel=0, note=1, velocity=0, time=62),
-        mido.Message(type="note_on", channel=0, note=2, velocity=2, time=62),
-        mido.Message(type="note_on", channel=0, note=99, velocity=3, time=62),
-        mido.Message(type="note_on", channel=0, note=4, velocity=4, time=0),
-        mido.MetaMessage('key_signature', key='Ab', time=0),
-        mido.Message(type="note_on", channel=0, note=2, velocity=0, time=0),
-        mido.Message(type="note_on", channel=0, note=100, velocity=100, time=0),
-        mido.Message(type="note_on", channel=0, note=100, velocity=0, time=35),
-        mido.Message(type="note_on", channel=0, note=99, velocity=0, time=0),
-        mido.Message(type="note_on", channel=0, note=4, velocity=0, time=0),
-        mido.Message(type="note_on", channel=0, note=100, velocity=6, time=167),
-        mido.MetaMessage(type="end_of_track", time=10)
-    ])
-
-    mid = mido.MidiFile()
-    mid.tracks = [track]
-
-    toolbox = MidiToolbox([NoteSorter])
-    new_mid = toolbox.process_midi_file(mid)
-
-    for msg in new_mid.tracks[0]:
-        print(msg)
-
-if __name__ == "__main__":
-    main()
+# def main():
+#
+#     from midi_handlers.toolbox.MidiToolbox import MidiToolbox
+#     import mido
+#
+#     track = mido.MidiTrack([
+#         mido.MetaMessage('key_signature', key='Ab', time=0),
+#         mido.Message(type="note_on", channel=0, note=1, velocity=1, time=62),
+#         mido.Message(type="note_on", channel=0, note=1, velocity=0, time=62),
+#         mido.Message(type="note_on", channel=0, note=2, velocity=2, time=62),
+#         mido.Message(type="note_on", channel=0, note=99, velocity=3, time=62),
+#         mido.Message(type="note_on", channel=0, note=4, velocity=4, time=0),
+#         mido.MetaMessage('key_signature', key='Ab', time=0),
+#         mido.Message(type="note_on", channel=0, note=2, velocity=0, time=0),
+#         mido.Message(type="note_on", channel=0, note=100, velocity=100, time=0),
+#         mido.Message(type="note_on", channel=0, note=100, velocity=0, time=35),
+#         mido.Message(type="note_on", channel=0, note=99, velocity=0, time=0),
+#         mido.Message(type="note_on", channel=0, note=4, velocity=0, time=0),
+#         mido.Message(type="note_on", channel=0, note=100, velocity=6, time=167),
+#         mido.MetaMessage(type="end_of_track", time=10)
+#     ])
+#
+#     mid = mido.MidiFile()
+#     mid.tracks = [track]
+#
+#     toolbox = MidiToolbox([NoteSorter])
+#     new_mid = toolbox.process_midi_file(mid)
+#
+#     for msg in new_mid.tracks[0]:
+#         print(msg)
+#
+# if __name__ == "__main__":
+#     main()

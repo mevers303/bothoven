@@ -24,9 +24,9 @@ class MidiToolbox:
             tool = tool_type()
 
             if tool.priority == "first":
-                self.tools.append(tool)
-            elif tool.priority == "last":
                 self.tools.appendleft(tool)
+            elif tool.priority == "last":
+                self.tools.append(tool)
             else:
                 raise ValueError("MidiTool.priority must be \"first\" or \"last\".")
 
