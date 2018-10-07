@@ -33,29 +33,30 @@ def main():
     done = 0
     for filename in filenames:
 
+        progress_bar(done, filenames_count, text=filename)
+        done += 1
+
         try:
             mid = toolbox.process_midi_file(mido.MidiFile(filename))
             mid = toolbox2.process_midi_file(mid)
         except KeyboardInterrupt:
-            raise KeyboardInterrupt
+            exit(9)
         except Exception as e:
             print("\nThere was an error reading", filename)
             print(e)
-            done += 1
-            progress_bar(done, filenames_count, text=filename)
             continue
 
         try:
             mid.save(os.path.join(out_dir, os.path.basename(filename)))
         except KeyboardInterrupt:
-            exit(1)
+            exit(9)
         except Exception as e:
             print("\nThere was an error saving", mid.save(os.path.basename(filename)))
             print(e)
             continue
-        finally:
-            done += 1
-            progress_bar(done, filenames_count, text=filename)
+
+    done += 1
+    progress_bar(done, filenames_count, text="Complete")
 
 
 
