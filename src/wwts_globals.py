@@ -122,12 +122,14 @@ def to_reltime(messages):
 
 
 _progress_bar_last_time = 0
-def progress_bar(done, total, resolution=0.125, text=""):
+def progress_bar(done, total, text="", clear_when_done=False, resolution=0.25):
     """
     Prints a progress bar to stdout.
     :param done: Number of items complete
     :param total: Total number if items
     :param resolution: How often to update the progress bar (in seconds).
+    :param text: Text to be displayed below the progress bar every update.
+    :param clear_when_done: Clear the progress bar or leave it when completed?
     :return: None
     """
 
@@ -140,19 +142,43 @@ def progress_bar(done, total, resolution=0.125, text=""):
     # percentage done
     i = int(done / total * 100)
 
-    stdout.write('\r')
+    # go to beginning of our output
+    if text and done > 0:
+        stdout.write("\r")
+        stdout.write("\033[F")
+    else:
+        stdout.write("\r")
+
+    # stdout.write("[{}]{}%".format(("-" * int(i / 2) + (">" if i < 100 else "")).ljust(50), str(i).rjust(4)))
     # print the progress bar
-    stdout.write("[{}]{}%".format(("-" * int(i / 2) + (">" if i < 100 else "")).ljust(50), str(i).rjust(4)))
-    # print the text figures
+    stdout.write( "[" + (("-" * int(i / 2)) +  (">" if i < 100 else "")).ljust(50) + "]" )
+    # print the percentage
+    stdout.write(str(i).rjust(4) + "%")
+    # print the text progress
     stdout.write(" ({}/{})".format(done, total))
+    # print the text below (if any)
     if text:
-        stdout.write(" " + text)
-    stdout.flush()
+        stdout.write("\n" + text)
 
     if i == 100:
-        # print("\n")
-        stdout.write('\r')
-        stdout.write(' ' * 120)
-        stdout.write('\r')
+
+        if clear_when_done:
+            stdout.write('\r')
+            stdout.write(' ' * 120)
+
+            if text:
+                stdout.write("\r")
+                stdout.write("\033[F")
+                stdout.write(' ' * 120)
+
+            stdout.write('\r')
+
+        else:
+            if text:
+                stdout.write("\rComplete\n")
+            else:
+                stdout.write("\n")
+
+    stdout.flush()
 
     _progress_bar_last_time = time_now
