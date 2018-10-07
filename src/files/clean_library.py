@@ -42,7 +42,7 @@ def main():
             print("\nThere was an error reading", filename)
             print(e)
             done += 1
-            progress_bar(done, filenames_count)
+            progress_bar(done, filenames_count, text=filename)
             continue
 
         try:
@@ -55,7 +55,7 @@ def main():
             continue
         finally:
             done += 1
-            progress_bar(done, filenames_count)
+            progress_bar(done, filenames_count, text=filename)
 
 
 
