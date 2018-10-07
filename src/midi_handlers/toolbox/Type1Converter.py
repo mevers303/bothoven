@@ -14,7 +14,7 @@ class Type1Converter(MidiTool):
         self.new_mid = mido.MidiFile(type=1)  # new mido to hold new file
         self.new_tracks = defaultdict(mido.MidiTrack)  # dict to hold a track for each channel
 
-        self.meta_channel = 0  # the current chanel to display meta messages
+        self.meta_channel = -1  # the current chanel to display meta messages
         self.absolute_time = 0  # a running total of ticks gone by
 
 
