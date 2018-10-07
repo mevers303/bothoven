@@ -21,7 +21,7 @@ class MiddleCTransposer(MidiTool):
             if not msg.velocity:  # skip if it's a note off (velocity = 0)
                 return
 
-            if msg.channel != 10:  # skip channel 10 (drums)
+            if msg.channel != 9:  # skip channel 10 (drums)
                 self.note_distribution[msg.note] += 1
                 self.keysig_distribution[msg.note % 12] += 1
 

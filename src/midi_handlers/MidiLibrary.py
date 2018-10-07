@@ -61,7 +61,7 @@ class MidiLibrary:
 
                 for msg in track:
 
-                    if not (msg.type == "note_on" or msg.type == "note_off"):
+                    if not (msg.type == "note_on" or msg.type == "note_off") or msg.channel == 9:
                         # store the delta time of any skipped messages
                         cum_time += msg.time
                         continue
