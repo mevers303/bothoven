@@ -4,7 +4,6 @@
 # Global variables and functions
 
 from sys import stdout
-from numpy import argsort
 from time import time
 
 
@@ -20,10 +19,16 @@ MAXIMUM_WORKS = 120
 # How many ticks per beat should each track be converted to?
 TICKS_PER_BEAT = 1920
 # The resolution of music notes
-MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 2**5  # 128th notes
-MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**4  # 128th note triplets
-# The longest note allowed
-MAXIMUM_NOTE_LENGTH = TICKS_PER_BEAT * 8   # two whole notes
+MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 2**4  # 128th notes
+MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**3  # 128th note triplets
+
+# the number of steps in the model
+NUM_STEPS = 64
+# the number of features for the model
+NUM_FEATURES = 256 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
+
+
+
 
 
 
@@ -43,18 +48,6 @@ KEY_SIGNATURES = [[ 0,  2,  4,  5 , 7,  9, 11],  # C
                   [ 9, 11,  1,  2,  4,  6,  8],  # A
                   [10,  0,  2,  3,  5,  7,  9],  # Bb
                   [11,  1,  3,  4,  6,  8, 10]]  # B
-
-# create a list of all the possible not durations to use to bin message durations into later on
-this_bin = MAXIMUM_NOTE_LENGTH
-DURATION_BINS = [this_bin]
-
-while this_bin > MINIMUM_NOTE_LENGTH:
-    # divide by half to get the next smallest note
-    this_bin = int(this_bin / 2)
-    # add the dotted note duration first cause it's bigger
-    DURATION_BINS.append(int(this_bin * 1.5))
-    DURATION_BINS.append(int(this_bin))
-
 
 
 
@@ -110,66 +103,6 @@ def midi_to_string(midi_note):
     return note[0] + str(note[1])
 
 
-def get_key_signature(note_dist):
-    """
-    Uses the note distribution in the meta dataframe to determine a filename's key signature
-    :param note_dist: Distribution of notes as per music_notes
-    :return: The index of key_signatures that is the best match.
-    """
-
-    top_notes = set(argsort(note_dist)[::-1][:7])
-
-
-    best_match = -1
-    best_match_set_dif_len = 100
-
-    for i in range(len(KEY_SIGNATURES)):
-
-        # find number of uncommon notes
-        set_dif_len = len(set(KEY_SIGNATURES[i]) - top_notes)
-
-        # if this one is better than the last, save it
-        if set_dif_len < best_match_set_dif_len:
-            best_match = i
-            best_match_set_dif_len = set_dif_len
-
-            # if there are 0 uncommon notes, it is our match!
-            if not best_match_set_dif_len:
-                break
-
-
-    return best_match
-
-
-def bin_note_duration(duration):
-    """
-    Rounds the duration to the closest value in DURATION_BINS
-    :param duration: This note's duration
-    :return: A new duration in ticks
-    """
-
-    smallest_difference = MAXIMUM_NOTE_LENGTH
-    best_match = MAXIMUM_NOTE_LENGTH
-
-    for bin in DURATION_BINS:
-
-        difference = abs(duration - bin)
-
-        if not difference:
-            # they're equal
-            return bin
-        elif difference < smallest_difference:
-            # find the whichever bin it's closest to
-            smallest_difference = difference
-            best_match = bin
-        elif difference > smallest_difference:
-            # we passed our bin
-            return best_match
-
-    # this should never execute but just for sanity's sake
-    return best_match
-
-
 def to_reltime(messages):
     """
         Convert messages to relative time.
@@ -181,7 +114,6 @@ def to_reltime(messages):
         delta = msg.time - now
         yield msg.copy(time=delta)
         now = msg.time
-
 
 
 _progress_bar_last_time = 0

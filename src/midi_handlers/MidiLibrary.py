@@ -3,10 +3,13 @@
 # MidiLibrary.py
 # Objects for managing a set of MIDI files.
 
+import numpy as np
 import mido
 import os
 import random
 from sklearn.model_selection import train_test_split
+
+from files.file_functions import get_filenames
 import wwts_globals
 
 
@@ -25,20 +28,7 @@ class FlatMidiLibrary:
 
     def get_filenames(self):
 
-        self.filenames = []
-
-        for root, dirs, files in os.walk(self.base_dir):
-
-            for file in files:
-
-                full_path = os.path.join(root, file)
-                filename = file.lower()
-                if not (filename.endswith(".mid") or filename.endswith(".midi") or filename.endswith(".smf")):
-                    print("Unknown file:", full_path)
-                    continue
-
-                self.filenames.append(full_path)
-
+        self.filenames = get_filenames(self.base_dir)
         self.filenames_count = len(self.filenames)
         print("Found", self.filenames_count, "in", self.base_dir)
 
@@ -51,12 +41,53 @@ class FlatMidiLibrary:
         for filename in self.filenames:
             try:
                 self.mids.append(mido.MidiFile(filename))
-            except:
-                pass
+            except Exception as e:
+                print("\nThere was an error reading", filename)
+                print(e)
             finally:
                 done += 1
                 wwts_globals.progress_bar(done, self.filenames_count)
 
+
+    def step_through(self):
+
+        for mid in self.mids:
+
+            for track in mid.tracks:
+
+                # time series matrix
+                buf = np.zeros((wwts_globals.NUM_STEPS, wwts_globals.NUM_FEATURES))
+                # set special one-hot for track_start
+                buf[-1, -2] = 1
+                # cumulative delta time from skipped notes
+                cum_time = 0
+
+                for msg in track:
+
+                    if msg.type != "note_on" or msg.type != "note_off":
+                        # store the delta time of any skipped messages
+                        cum_time += msg.time
+                        continue
+
+                    # move the time series up one
+                    buf = np.roll(buf, -1, axis=0)
+                    # set the time
+                    buf[-1, 0] = msg.time + cum_time
+                    # reset skipped time delta
+                    cum_time = 0
+                    # find the one-hot note code
+                    note_code = msg.note + 1 if msg.type == "note_on" else msg.note + 128 + 1
+                    buf[note_code] = 1
+
+                    # spit out this buffer
+                    yield buf
+
+                # if there were actual usable messages in the track, end the track
+                if buf[-1, -2] != 1:
+                    buf = np.roll(buf, -1, axis=0)
+                    # special one-hot for track end
+                    buf[-1, -1] = 1
+                    yield buf
 
 
 

@@ -1,6 +1,7 @@
 import mido
 import os
 
+from files.file_functions import get_filenames
 from midi_handlers.toolbox.FixEndOfTrack import FixEndOfTrack
 from midi_handlers.toolbox.MiddleCTransposer import MiddleCTransposer
 from midi_handlers.toolbox.MidiToolbox import MidiToolbox
@@ -15,29 +16,11 @@ from midi_handlers.toolbox.Type1Converter import Type1Converter
 from wwts_globals import progress_bar
 
 
-def get_filenames(base_dir):
-
-    filenames = []
-
-    for root, dirs, files in os.walk(base_dir):
-
-        for file in files:
-
-            full_path = os.path.join(root, file)
-            filename = file.lower()
-            if not (filename.endswith(".mid") or filename.endswith(".midi") or filename.endswith(".smf")):
-                print("Unknown file:", full_path)
-                continue
-
-            filenames.append(full_path)
-
-    return filenames
-
-
 
 def main():
 
     base_dir = "midi/classical/Bach"
+    out_dir = "midi/bach_cleaned"
 
     filenames = get_filenames("midi/classical/Bach")
     filenames_count = len(filenames)
@@ -57,12 +40,14 @@ def main():
         except Exception as e:
             print("\nThere was an error reading", filename)
             print(e)
+            done += 1
+            progress_bar(done, filenames_count)
             continue
 
         try:
-            mid.save("midi/bach_cleaned/" + os.path.basename(filename))
+            mid.save(os.path.join(out_dir, os.path.basename(filename)))
         except KeyboardInterrupt:
-            raise KeyboardInterrupt
+            exit(1)
         except Exception as e:
             print("\nThere was an error saving", mid.save(os.path.basename(filename)))
             print(e)
@@ -70,6 +55,7 @@ def main():
         finally:
             done += 1
             progress_bar(done, filenames_count)
+
 
 
 def main2():
@@ -87,4 +73,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main2()
+    main()
