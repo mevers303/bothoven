@@ -61,7 +61,7 @@ class MidiLibrary:
 
                 for msg in track:
 
-                    if not (msg.type == "note_on" or msg.type == "note_off") or msg.channel == 9:
+                    if not (msg.type == "note_on" or msg.type == "note_off") or msg.channel == 9:  # skip drum tracks
                         # store the delta time of any skipped messages
                         cum_time += msg.time
                         continue
@@ -76,7 +76,7 @@ class MidiLibrary:
                     note_code = msg.note + 1 if msg.type == "note_on" else msg.note + 128 + 1
                     target[note_code] = 1
                     # spit out this buffer
-                    yield buf, target
+                    yield buf.copy(), target
 
                     # move the time series up one
                     buf = np.roll(buf, -1, axis=0)
@@ -90,7 +90,7 @@ class MidiLibrary:
                     target = np.zeros((wwts_globals.NUM_FEATURES), dtype=np.uint32)
                     target[-1] = 1
                     # yield the end of track
-                    yield buf, target
+                    yield buf.copy(), target
                 else:
                     pass
 

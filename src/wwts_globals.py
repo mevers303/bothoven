@@ -26,6 +26,11 @@ MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**3  # 128th note triplets
 NUM_STEPS = 64
 # the number of features for the model
 NUM_FEATURES = 256 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
+# number of epochs to train for
+N_EPOCHS = 20
+# the batch size for training
+BATCH_SIZE = 64
+
 
 
 
