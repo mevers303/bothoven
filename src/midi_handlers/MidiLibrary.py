@@ -125,9 +125,8 @@ class MidiLibraryFlat(MidiLibrary):
 
     def __init__(self, base_dir="", filenames=None, autoload=True):
 
-        super().__init__(base_dir, filenames, autoload)
-
         self.buf = None
+        super().__init__(base_dir, filenames, autoload)
 
 
     def load(self):
@@ -180,7 +179,6 @@ class MidiLibrarySplit(MidiLibrary):
 
     def load(self):
 
-        super().load()
         self.split_files()
 
 
@@ -190,19 +188,17 @@ def main():
     import pickle
 
     lib = MidiLibraryFlat("midi/short")
-    lib.load()
+    # lib.load()  # autoload is on by default
 
     # with open("midi/pickles/bach.pkl", "wb") as f:
     #     pickle.dump(lib, f)
 
-    with open("midi/pickles/bach.pkl", "rb") as f:
-        lib = pickle.load(f)
+    # with open("midi/pickles/bach.pkl", "rb") as f:
+    #     lib = pickle.load(f)
 
-        x = 0
-
-        for buf, target in lib.step_through():
-            pass
-            # print("time:", str(time).rjust(5), "note: ", note)
+    for buf, target in lib.step_through():
+        pass
+        # print("time:", str(time).rjust(5), "note: ", note)
 
 if __name__ == "__main__":
     main()
