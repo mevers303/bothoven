@@ -135,7 +135,7 @@ class MidiLibraryFlat(MidiLibrary):
 
         i = 0
 
-        while i > self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
+        while i < self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
 
             x = self.buf[i:i + NUM_STEPS]
             y = self.buf[i + NUM_STEPS]
@@ -148,18 +148,21 @@ class MidiLibraryFlat(MidiLibrary):
     def next_batch(self):
 
         i = 0
-        batch = []
+        batch_x = []
+        batch_y = []
 
         while True:
 
-            for step in self.step_through():
+            for x, y in self.step_through():
 
                 if i >= BATCH_SIZE:
-                    yield batch
-                    batch.clear()
+                    yield np.array(batch_x), np.array(batch_y)
+                    batch_x.clear()
+                    batch_y.clear()
                     i = 0
 
-                batch.append(step)
+                batch_x.append(x)
+                batch_y.append(y)
                 i += 1
 
 

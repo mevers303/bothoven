@@ -90,9 +90,9 @@ def fit_model(_model, _dataset, name):
     train_steps_per_epoch = (_dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
     test_steps_per_epoch = (_dataset.test_lib.buf.shape[0] - 1) // BATCH_SIZE
     model_save_filepath = os.path.join("src/models/", name, "epoch_{epoch:02d}-{val_loss:.2f}.hdf5")
-    callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss', verbose=1)]
+    callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss')]
 
-    history = _model.fit_generator(_dataset.train_lib.next_batch(), steps_per_epoch=train_steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, validation_data=_dataset.test_lib.next_batch(), validation_steps=test_steps_per_epoch)
+    history = _model.fit_generator(_dataset.train_lib.next_batch(), steps_per_epoch=train_steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, validation_data=_dataset.test_lib.next_batch(), validation_steps=test_steps_per_epoch, verbose=2)
 
     with open(logfile, "a") as f:
         f.write(str(history))
