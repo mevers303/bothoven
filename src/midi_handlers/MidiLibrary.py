@@ -20,12 +20,10 @@ class MidiLibrary(ABC):
     def __init__(self, base_dir="", filenames=None, autoload=True):
 
         self.base_dir = base_dir
-        self.filenames = None
+        self.filenames = filenames
         self.midi = None
 
-        if filenames:
-            self.filenames = filenames
-        else:
+        if self.filenames is None:
             self.find_files()
 
         if autoload:
@@ -157,12 +155,12 @@ class MidiLibrarySplit(MidiLibrary):
 
     def __init__(self, base_dir):
 
-        super().__init__(base_dir)
-
         self.filenames_train = None
         self.filenames_test = None
-        self.mids_train = None
-        self.mids_test = None
+        self.train_lib = None
+        self.test_lib = None
+
+        super().__init__(base_dir)
 
 
     def split_files(self):
@@ -173,13 +171,16 @@ class MidiLibrarySplit(MidiLibrary):
 
         self.filenames_train = self.filenames[train_indices]
         self.filenames_test = self.filenames[test_indices]
-        self.mids_train = self.mids[train_indices]
-        self.mids_test = self.mids[test_indices]
+        self.train_lib = MidiLibraryFlat(filenames=self.filenames_train)
+        self.test_lib = MidiLibraryFlat(filenames=self.filenames_test)
 
 
     def load(self):
 
         self.split_files()
+
+    def step_through(self):
+        pass
 
 
 
@@ -187,7 +188,7 @@ def main():
 
     import pickle
 
-    lib = MidiLibraryFlat("midi/bach_cleaned")
+    lib = MidiLibrarySplit("midi/bach_cleaned")
     # lib.load()  # autoload is on by default
 
     # with open("midi/pickles/bach.pkl", "wb") as f:
