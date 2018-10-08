@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 
 from files.file_functions import get_filenames
 import wwts_globals
-from wwts_globals import NUM_STEPS, NUM_FEATURES
+from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
 
@@ -135,11 +135,7 @@ class MidiLibraryFlat(MidiLibrary):
 
         i = 0
 
-        while True:
-
-            # reset it when it gets to the end
-            if i > self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
-                i = 0
+        while i > self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
 
             x = self.buf[i:i + NUM_STEPS]
             y = self.buf[i + NUM_STEPS]
@@ -147,6 +143,23 @@ class MidiLibraryFlat(MidiLibrary):
             i += 1
 
             yield x, y
+
+
+    def next_batch(self):
+
+        i = 0
+        batch = []
+
+        for step in self.step_through():
+
+            if i >= BATCH_SIZE:
+                yield batch
+                batch.clear()
+                i = 0
+
+            batch.append(step)
+            i += 1
+
 
 
 
