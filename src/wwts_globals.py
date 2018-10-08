@@ -92,7 +92,7 @@ def midi_to_music(midi_note):
     """
 
     music_note = MUSIC_NOTES[midi_note % 12]
-    octave = int(midi_note / 12) - 1
+    octave = midi_note // 12 - 1
 
     return music_note, octave
 
@@ -139,8 +139,12 @@ def progress_bar(done, total, text="", clear_when_done=False, resolution=0.25):
     if time_now - _progress_bar_last_time < resolution and done < total:
         return
 
-    # percentage done
-    i = int(done / total * 100)
+    # so we don't divide by 0
+    if not total:
+        i = 100
+    else:
+        # percentage done
+        i = done // total * 100
 
     # go to beginning of our output
     if text and done > 0:
@@ -149,9 +153,8 @@ def progress_bar(done, total, text="", clear_when_done=False, resolution=0.25):
     else:
         stdout.write("\r")
 
-    # stdout.write("[{}]{}%".format(("-" * int(i / 2) + (">" if i < 100 else "")).ljust(50), str(i).rjust(4)))
     # print the progress bar
-    stdout.write( "[" + (("-" * int(i / 2)) +  (">" if i < 100 else "")).ljust(50) + "]" )
+    stdout.write( "[" + (("-" * (i // 2)) +  (">" if i < 100 else "")).ljust(50) + "]" )
     # print the percentage
     stdout.write(str(i).rjust(4) + "%")
     # print the text progress
@@ -175,10 +178,7 @@ def progress_bar(done, total, text="", clear_when_done=False, resolution=0.25):
             stdout.write('\r')
 
         else:
-            if text:
-                stdout.write("\rComplete\n")
-            else:
-                stdout.write("\n")
+            stdout.write("\n")
 
     stdout.flush()
 
