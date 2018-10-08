@@ -140,11 +140,11 @@ class MidiLibraryFlat(MidiLibrary):
         while True:
 
             # reset it when it gets to the end
-            if i >= self.buf.size - NUM_STEPS - 1:  # gotta leave room for the target at the end
+            if i > self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
                 i = 0
 
             x = self.buf[i:i + NUM_STEPS]
-            y = self.buf[i + NUM_STEPS + 1]
+            y = self.buf[i + NUM_STEPS]
 
             i += 1
 
@@ -187,7 +187,7 @@ def main():
 
     import pickle
 
-    lib = MidiLibraryFlat("midi/short")
+    lib = MidiLibraryFlat("midi/bach_cleaned")
     # lib.load()  # autoload is on by default
 
     # with open("midi/pickles/bach.pkl", "wb") as f:
@@ -196,9 +196,9 @@ def main():
     # with open("midi/pickles/bach.pkl", "rb") as f:
     #     lib = pickle.load(f)
 
-    for buf, target in lib.step_through():
-        pass
-        # print("time:", str(time).rjust(5), "note: ", note)
+    # for buf, target in lib.step_through():
+    #     pass
+    #     # print("time:", str(time).rjust(5), "note: ", note)
 
 if __name__ == "__main__":
     main()

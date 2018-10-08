@@ -35,6 +35,7 @@ def main():
         progress_bar(done, filenames_count, text=filename)
         done += 1
 
+        mid = None
         try:
             mid = toolbox.process_midi_file(mido.MidiFile(filename))
         except KeyboardInterrupt:
