@@ -189,7 +189,7 @@ def main():
 
     import pickle
 
-    lib = MidiLibrarySplit("midi/short")
+    lib = MidiLibraryFlat("midi/short")
     lib.load()
 
     # with open("midi/pickles/bach.pkl", "wb") as f:
