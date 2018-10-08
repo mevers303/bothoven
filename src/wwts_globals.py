@@ -29,7 +29,7 @@ NUM_FEATURES = 256 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
 # number of epochs to train for
 N_EPOCHS = 20
 # the batch size for training
-BATCH_SIZE = 4096
+BATCH_SIZE = 1024
 
 
 

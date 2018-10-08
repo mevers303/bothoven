@@ -22,7 +22,8 @@ np.random.seed(777)
 def create_model(name):
 
     # CREATE THE _model
-    _model = keras.models.Sequential()
+    _model = keras.models.Sequential(keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES)))
+    # _model.add(keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES)))
     _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
     _model.add(keras.layers.Dropout(.555))
     _model.add(keras.layers.LSTM(units=444, return_sequences=True))
@@ -102,13 +103,13 @@ def main():
     lib_path = "midi/bach_cleaned"
     pickle_path = "midi/pickles/bach.pkl"
 
+    print("Creating model...")
+    model = create_model(model_name)
+
     print("Loading dataset...")
     # dataset = MidiLibrarySplit(lib_path)
     with open(pickle_path, "rb") as f:
         dataset = pickle.load(f)
-
-    print("Creating model...")
-    model = create_model(model_name)
 
     print("Fitting model...")
     fit_model(model, dataset, model_name)

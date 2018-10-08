@@ -156,7 +156,7 @@ class MidiLibraryFlat(MidiLibrary):
             for x, y in self.step_through():
 
                 if i >= BATCH_SIZE:
-                    yield np.array(batch_x), np.array(batch_y)
+                    yield np.array(batch_x, dtype=np.uint32), np.array(batch_y, dtype=np.uint32)
                     batch_x.clear()
                     batch_y.clear()
                     i = 0
@@ -165,7 +165,7 @@ class MidiLibraryFlat(MidiLibrary):
                 batch_y.append(y)
                 i += 1
 
-            yield np.array(batch_x), np.array(batch_y)
+            yield np.array(batch_x, dtype=np.uint32), np.array(batch_y, dtype=np.uint32)
             batch_x.clear()
             batch_y.clear()
             i = 0
