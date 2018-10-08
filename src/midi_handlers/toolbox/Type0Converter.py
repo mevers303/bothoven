@@ -12,7 +12,7 @@ class Type0Converter(MidiTool):
 
         if mid.type == 0:
             return
-
+        # TODO: Make meta messages appear in the right channel
         new_track = mido.midifiles.tracks.merge_tracks(mid.tracks)
         mid.tracks.clear()
         mid.tracks.append(new_track)
