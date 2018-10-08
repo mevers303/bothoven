@@ -54,7 +54,7 @@ class MidiLibrary(ABC):
 
         for filename in filenames:
 
-            wwts_globals.progress_bar(done, filenames.size, "Buffering " + filename + "...")
+            wwts_globals.progress_bar(done, filenames.size, "Buffering " + filename + "...", clear_when_done=True)
             done += 1
 
             try:
@@ -66,7 +66,7 @@ class MidiLibrary(ABC):
 
             buf.extend(MidiLibrary.mid_to_array(mid))
 
-        wwts_globals.progress_bar(done, filenames.size, "Buffering complete!")
+        wwts_globals.progress_bar(done, filenames.size, "Buffering complete!", clear_when_done=True)
 
         return np.array(buf, dtype=np.uint32)
 
@@ -211,22 +211,19 @@ class MidiLibrarySplit(MidiLibrary):
 
 def main():
 
+    import os
     import pickle
 
-    lib = MidiLibrarySplit("midi/bach_cleaned")
+    lib_name = "metallica"
+
+    lib = MidiLibrarySplit(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default
 
     print("Pickling...")
-    with open("midi/pickles/bach.pkl", "wb") as f:
+    with open(os.path.join("midi/pickles/", lib_name + ".pkl"), "wb") as f:
         pickle.dump(lib, f)
     print("Done!")
 
-    # with open("midi/pickles/bach.pkl", "rb") as f:
-    #     lib = pickle.load(f)
-
-    # for buf, target in lib.step_through():
-    #     pass
-    #     # print("time:", str(time).rjust(5), "note: ", note)
 
 if __name__ == "__main__":
     main()

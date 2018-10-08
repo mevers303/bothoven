@@ -8,8 +8,8 @@ import numpy as np
 import os
 import pickle
 
-import sys
-sys.path.append("src")
+# import sys
+# sys.path.append("src")
 
 from midi_handlers.MidiLibrary import MidiLibrarySplit, MidiLibraryFlat
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
@@ -83,7 +83,7 @@ def fit_model(_model, _dataset, name):
 
     train_steps_per_epoch = (_dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
     test_steps_per_epoch = (_dataset.test_lib.buf.shape[0] - 1) // BATCH_SIZE
-    model_save_filepath = os.path.join("src/models/", name, "epoch_{epoch:02d}-{val_loss:.2f}.hdf5")
+    model_save_filepath = os.path.join("models/", name, "epoch_{epoch:02d}-{val_loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss')]
 
     history = _model.fit_generator(_dataset.train_lib.next_batch(), steps_per_epoch=train_steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, validation_data=_dataset.test_lib.next_batch(), validation_steps=test_steps_per_epoch)
@@ -101,16 +101,18 @@ def fit_model(_model, _dataset, name):
 
 def main():
 
-    model_name = "bach666555444333222111"
-    lib_path = "midi/bach_cleaned"
-    pickle_path = "midi/pickles/bach.pkl"
+    lib_name = "metallica"
+    model_name = "metallica_666555444333222111"
+
+    if not os.path.exists(f"models/{model_name}"):
+        os.mkdir(f"models/{model_name}")
 
     print("Creating model...")
     model = create_model(model_name)
 
     print("Loading dataset...")
     # dataset = MidiLibrarySplit(lib_path)
-    with open(pickle_path, "rb") as f:
+    with open(f"midi/pickles/{lib_name}.pkl", "rb") as f:
         dataset = pickle.load(f)
 
     print("Fitting model...")
