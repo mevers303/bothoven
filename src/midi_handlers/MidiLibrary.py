@@ -103,10 +103,10 @@ class MidiLibrary(ABC):
 
                 # the current step we are on
                 this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
-                this_step[0] = msg.time + cum_time
+                this_step[-3] = msg.time + cum_time
                 cum_time = 0
                 # find the one-hot note code
-                note_code = msg.note + 1 if msg.type == "note_on" else msg.note + 128 + 1
+                note_code = msg.note if msg.type == "note_on" else msg.note + 128
                 this_step[note_code] = 1
 
                 buf.append(this_step)
