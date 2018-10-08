@@ -6,7 +6,7 @@ class FixEndOfTrack(MidiTool):
 
     def __init__(self):
 
-        super().__init__(priority="first", do_prerun=True)
+        super().__init__(priority="first", do_prerun=False)
 
         self.current_pos = 0
         self.to_remove = None
