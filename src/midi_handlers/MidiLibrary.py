@@ -193,8 +193,10 @@ def main():
     lib = MidiLibrarySplit("midi/bach_cleaned")
     # lib.load()  # autoload is on by default
 
+    print("Pickling...")
     with open("midi/pickles/bach.pkl", "wb") as f:
         pickle.dump(lib, f)
+    print("Done!")
 
     # with open("midi/pickles/bach.pkl", "rb") as f:
     #     lib = pickle.load(f)
