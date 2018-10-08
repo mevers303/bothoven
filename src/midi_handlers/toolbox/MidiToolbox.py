@@ -62,6 +62,10 @@ class MidiToolbox:
     def prerun(self, mid):
 
         for tool in self.tools:
+
+            if not tool.do_prerun:
+                continue
+
             tool.prerun_file_event(mid)
 
             for track in mid.tracks:

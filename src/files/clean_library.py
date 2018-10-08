@@ -26,8 +26,7 @@ def main():
     filenames_count = len(filenames)
     print("Found", filenames_count, "in", base_dir)
 
-    toolbox = MidiToolbox([TickTransposer, Type0Converter, Quantizer, NoteSorter, NoteOnToNoteOff, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer])
-    toolbox2 = MidiToolbox([Type1Converter])
+    toolbox = MidiToolbox([TickTransposer, Type1Converter, Type0Converter, Quantizer, NoteSorter, NoteOnToNoteOff, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer])
     print("Toolbox loaded")
 
     done = 0
@@ -38,7 +37,6 @@ def main():
 
         try:
             mid = toolbox.process_midi_file(mido.MidiFile(filename))
-            mid = toolbox2.process_midi_file(mid)
         except KeyboardInterrupt:
             exit(9)
         except Exception as e:
