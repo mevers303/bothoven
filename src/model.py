@@ -11,7 +11,7 @@ import pickle
 # import sys
 # sys.path.append("src")
 
-from midi_handlers.MidiLibrary import MidiLibrarySplit, MidiLibraryFlat
+from midi_handlers.MidiLibrary import MidiLibraryFlat
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 
@@ -81,7 +81,7 @@ def fit_model(_model, _dataset, name):
         f.write("Neurons: 666 -> 444 -> 222\n")
         f.write("Dropout: .555 -> .333 -> .111\n")
 
-    steps_per_epoch = (_dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
+    steps_per_epoch = (_dataset.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
     model_save_filepath = os.path.join("models/", name, "epoch_{epoch:02d}-{val_loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
