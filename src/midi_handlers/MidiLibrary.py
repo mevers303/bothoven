@@ -165,6 +165,11 @@ class MidiLibraryFlat(MidiLibrary):
                 batch_y.append(y)
                 i += 1
 
+            yield np.array(batch_x), np.array(batch_y)
+            batch_x.clear()
+            batch_y.clear()
+            i = 0
+
 
 
 
