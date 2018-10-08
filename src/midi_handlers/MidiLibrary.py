@@ -6,8 +6,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import mido
-import random
-from sklearn.model_selection import train_test_split
 
 from files.file_functions import get_filenames
 import wwts_globals
@@ -220,9 +218,29 @@ def main():
     # lib.load()  # autoload is on by default
 
     print("Pickling...")
-    with open(os.path.join("midi/pickles/", lib_name + ".pkl"), "wb") as f:
+    with open(os.path.join(f"midi/pickles/{lib_name}.pkl"), "wb") as f:
         pickle.dump(lib, f)
     print("Done!")
+
+
+def test():
+
+    import os
+    import pickle
+
+    lib_name = "metallica"
+
+    print("Loading pickle...")
+    with open(os.path.join(f"midi/pickles/{lib_name}.pkl"), "rb") as f:
+        lib = pickle.load(f)
+    print("Done!")
+
+    for x, y in lib.step_through():
+        print("x:")
+        print(x)
+        print("y:")
+        print(y)
+        print("\n")
 
 
 if __name__ == "__main__":
