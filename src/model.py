@@ -8,6 +8,9 @@ import numpy as np
 import os
 import pickle
 
+import sys
+sys.path.append("src")
+
 from midi_handlers.MidiLibrary import MidiLibrarySplit, MidiLibraryFlat
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
@@ -22,8 +25,7 @@ np.random.seed(777)
 def create_model(name):
 
     # CREATE THE _model
-    _model = keras.models.Sequential(keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES)))
-    # _model.add(keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES)))
+    _model = keras.models.Sequential()
     _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
     _model.add(keras.layers.Dropout(.555))
     _model.add(keras.layers.LSTM(units=444, return_sequences=True))
