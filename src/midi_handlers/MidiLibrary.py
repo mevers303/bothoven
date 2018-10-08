@@ -50,9 +50,10 @@ class MidiLibrary:
         self.mids = np.array(midi_files)
 
 
-    def step_through(self):
+    @staticmethod
+    def step_through(mids):
 
-        for mid in self.mids:
+        for mid in mids:
 
             for track in mid.tracks:
 
@@ -71,7 +72,7 @@ class MidiLibrary:
                         continue
 
                     # the next note beyond the buffer
-                    target = np.zeros((wwts_globals.NUM_FEATURES), dtype=np.uint32)
+                    target = np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32)
                     # set the time
                     target[0] = msg.time + cum_time
                     # reset skipped time delta
@@ -91,7 +92,7 @@ class MidiLibrary:
                 # if there were actual usable messages in the track, end the track
                 if buf[-1, -2] != 1:
                     # special one-hot for track end
-                    target = np.zeros((wwts_globals.NUM_FEATURES), dtype=np.uint32)
+                    target = np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32)
                     target[-1] = 1
                     # yield the end of track
                     yield buf.copy(), target
@@ -100,6 +101,39 @@ class MidiLibrary:
 
             print(len(mid.tracks), mid.filename)
 
+
+    @staticmethod
+    def mid_to_array(mid):
+
+        buf = []
+
+        # empty space before each file
+        for _ in range(wwts_globals.NUM_STEPS):
+            buf.append(np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32))
+
+        # the start_track one hot
+        buf[-1][-2] = 1
+
+        for track in mid.tracks:
+
+            # cumulative delta time from skipped notes
+            cum_time = 0
+
+            for msg in track:
+
+                if not (msg.type == "note_on" or msg.type == "note_off") or msg.channel == 9:  # skip drum tracks
+                    # store the delta time of any skipped messages
+                    cum_time += msg.time
+                    continue
+
+                this_step = np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32)
+                this_step[0] = msg.time + cum_time
+                cum_time = 0
+                # find the one-hot note code
+                note_code = msg.note + 1 if msg.type == "note_on" else msg.note + 128 + 1
+                this_step[note_code] = 1
+
+                buf.append(this_step)
 
 
 class MidiLibrarySplit(MidiLibrary):
@@ -137,7 +171,7 @@ def main():
 
     import pickle
 
-    lib = MidiLibrary("midi/bach_cleaned")
+    lib = MidiLibrarySplit("midi/bach_cleaned")
     lib.load()
 
     with open("midi/pickles/bach.pkl", "wb") as f:

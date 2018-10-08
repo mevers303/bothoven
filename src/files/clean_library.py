@@ -53,7 +53,6 @@ def main():
             print(e)
             continue
 
-    done += 1
     progress_bar(done, filenames_count, text="Complete")
 
 
