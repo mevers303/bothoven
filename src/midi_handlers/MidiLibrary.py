@@ -216,7 +216,7 @@ def main():
 
     lib_name = "metallica"
 
-    lib = MidiLibrarySplit(os.path.join("midi", lib_name))
+    lib = MidiLibraryFlat(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default
 
     print("Pickling...")
