@@ -12,7 +12,7 @@ class FixEndOfTrack(MidiTool):
         self.to_remove = None
 
 
-    def prerun_track_event(self, track):
+    def track_event(self, track):
 
         self.current_pos = 0
         self.to_remove = []

@@ -46,19 +46,14 @@ class MidiToolbox:
         for tool in self.tools:
             tool.file_event(mid)
 
-        for track in mid.tracks:
-
-            for tool in self.tools:
+            for track in mid.tracks:
                 tool.track_event(track)
 
-            for msg in track:
-                for tool in self.tools:
+                for msg in track:
                     tool.message_event(msg)
 
-            for tool in self.tools:
                 tool.post_track_event(track)
 
-        for tool in self.tools:
             tool.post_process(mid)
 
         return mid
@@ -69,19 +64,14 @@ class MidiToolbox:
         for tool in self.tools:
             tool.prerun_file_event(mid)
 
-        for track in mid.tracks:
-
-            for tool in self.tools:
+            for track in mid.tracks:
                 tool.prerun_track_event(track)
 
-            for msg in track:
-                for tool in self.tools:
+                for msg in track:
                     tool.prerun_message_event(msg)
 
-            for tool in self.tools:
                 tool.prerun_post_track_event(track)
 
-        for tool in self.tools:
             tool.prerun_post_process(mid)
 
 
