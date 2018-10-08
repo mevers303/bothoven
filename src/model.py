@@ -24,7 +24,7 @@ np.random.seed(777)
 
 
 
-def create_model():
+def create_model(name):
 
     # CREATE THE _model
     _model = Sequential()
@@ -38,34 +38,38 @@ def create_model():
     _model.compile(loss='mae', optimizer='adam')
     print(_model.summary())
 
+    save_model_structure(_model, name)
+
     return _model
 
 
 
-def load_from_disk(filename):
+def load_model_structure(name):
+
+    structure_filename = os.path.join("src/models/", name, "model.json")
+    # weights_filename = os.path.join("src/models/", name, "epoch_" + epoch + ".h5")
+
 
     # load json and create _model
-    with open(filename + '.json', 'r') as f:
+    with open(structure_filename, 'r') as f:
         json_str = f.read()
     _model = model_from_json(json_str)
     # load weights into new _model
-    _model.load_weights(filename + ".h5")
+    # _model.load_weights(weights_filename)
     print("Loaded model from disk")
 
     return _model
 
 
+def save_model_structure(_model, name):
 
-def save_to_disk(_model, filename):
+    filename = os.path.join("src/models/", name, "model.json")
 
     print("Saving model to disk")
     # serialize _model to JSON
     _model_json = _model.to_json()
-    with open(filename + ".json", "w") as json_file:
+    with open(filename, "w") as json_file:
         json_file.write(_model_json)
-    # serialize weights to HDF5
-    _model.save_weights(filename + ".h5")
-
 
 
 def fit_model(_dataset, _model):
@@ -92,114 +96,6 @@ def fit_model(_dataset, _model):
 
 
 
-def kfold_eval(_dataset):
-
-    X, y = _dataset.get_all()
-    kfold = KFold(n_splits=10, shuffle=True)
-
-    results = cross_val_score(KerasClassifier(build_fn=create_model, epochs=N_EPOCHS, batch_size=BATCH_SIZE), X, y, cv=kfold)
-    print("Result: %.2f%% (%.2f%%)" % (results.mean() * 100, results.std() * 100))
-    print(results)
-
-    return results
-
-
-
-def predict_one_file(_model, filename, _dataset=None):
-
-    if _dataset:
-        note_dist = _dataset.meta_df.loc[filename][MUSIC_NOTES].values
-    else:
-        note_dist = MidiArchive.parse_midi_meta(filename)[14:]
-
-    mid = MidiFileNHot(filename, note_dist)
-    X = np.array(mid.to_X(), dtype=np.byte)
-
-    y_pred = _model.predict(X)
-    sum_probs = y_pred.sum(axis=0)
-    normed_probs = sum_probs / sum_probs.sum()
-
-    result = np.argmax(normed_probs)
-
-    return result, normed_probs
-
-
-
-def eval_file_accuracy(_dataset, _model):
-
-    y = _dataset.y_test_filenames
-    y_pred = [predict_one_file(_model, filename, _dataset)[0] for filename in _dataset.X_test_filenames]
-    y_pred_labels = np.array([_dataset.composers[row] for row in y_pred])
-
-    accuracy = (y == y_pred_labels).sum() / len(y)
-    precision, recall, fscore, support = precision_recall_fscore_support(y, y_pred_labels, labels=_dataset.composers)
-
-    print("\nModel Metrics:")
-    print("Accuracy: ", accuracy)
-    print("Precision:", precision)
-    print("Recall:   ", recall)
-    print("F-Score:  ", fscore)
-    print("Support:  ", support)
-
-    return accuracy, precision, recall, fscore
-
-
-
-class FileAccuracyCallback(Callback):
-
-    def __init__(self, _dataset):
-        super().__init__()
-        self.dataset = _dataset
-        self.history = []
-        self.best_accuracy = 0
-
-    def on_epoch_end(self, epoch, logs=None):
-
-        accuracy, precision, recall, fscore = eval_file_accuracy(self.dataset, self.model)
-        self.history.append((accuracy, precision, recall, fscore))
-
-        # if accuracy > self.best_accuracy:
-        #     print("Saving new best accuracy (", accuracy, ")")
-        self.model.save_weights("models/final_{0:02d}-{1:.2f}.h5".format(epoch + 1, accuracy))
-        self.best_accuracy = accuracy
-
-
-
-def epoch_gridsearch():
-
-    if os.path.exists("midi/classical/dataset.pkl"):
-        with open("midi/classical/dataset.pkl", "rb") as f:
-            dataset = pickle.load(f)
-
-    else:
-        dataset = VectorGetterNHot("midi/classical")
-        with open("midi/classical/dataset.pkl", "wb") as f:
-            pickle.dump(dataset, f)
-
-
-    X_train, X_test, y_train, y_test = dataset.get_all_split()
-    file_accuracy = FileAccuracyCallback(dataset)
-
-    model = create_model(dataset)
-    with open("models/final.json", "w") as f:
-        f.write(model.to_json())
-
-    model.fit(X_train, y_train, epochs=N_EPOCHS, batch_size=BATCH_SIZE, callbacks=[file_accuracy])
-
-
-    i = 1
-    for accuracy, precision, recall, fscore in file_accuracy.history:
-        print("\nModel Metrics (epoch {}):".format(i))
-        print("Accuracy: ", accuracy)
-        print("Precision:", precision)
-        print("Recall:   ", recall)
-        print("F-Score:  ", fscore)
-        i += 1
-
-    with open("models/final.json" "wb") as f:
-        pickle.dump(file_accuracy.history, f)
-
-
 if __name__ == "__main__":
 
-    epoch_gridsearch()
+    pass
