@@ -4,15 +4,6 @@
 # RNN classifier _model
 
 import keras
-# from keras.models import Sequential, model_from_json
-# from keras.layers import LSTM, Dense, Dropout
-# from keras.wrappers.scikit_learn import KerasClassifier
-# from keras.callbacks import Callback
-# from keras.utils import plot_model
-# from sklearn.model_selection import cross_val_score
-# from sklearn.metrics import precision_recall_fscore_support
-# from sklearn.model_selection import KFold
-# import pickle
 import numpy as np
 import os
 import pickle
@@ -69,7 +60,7 @@ def save_model_structure(_model, name):
 
     filename = os.path.join("models/", name, "model.json")
 
-    print("Saving model to disk")
+    print("Saving model to disk...")
     # serialize _model to JSON
     _model_json = _model.to_json()
     with open(filename, "w") as json_file:
@@ -92,7 +83,7 @@ def fit_model(_model, _dataset, name):
     model_save_filepath = os.path.join("src/models/", name, "epoch_{epoch:02d}-{val_loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss')]
 
-    history = _model.fit_generator(_dataset.train_lib.next_batch(), steps_per_epoch=train_steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, validation_data=_dataset.test_lib.next_batch(), validation_steps=test_steps_per_epoch, verbose=2)
+    history = _model.fit_generator(_dataset.train_lib.next_batch(), steps_per_epoch=train_steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, validation_data=_dataset.test_lib.next_batch(), validation_steps=test_steps_per_epoch)
 
     with open(logfile, "a") as f:
         f.write(str(history))
