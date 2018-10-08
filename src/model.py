@@ -3,7 +3,6 @@
 # _model_scratchpad.py
 # RNN classifier _model
 
-import numpy as np
 import keras
 # from keras.models import Sequential, model_from_json
 # from keras.layers import LSTM, Dense, Dropout
@@ -14,9 +13,10 @@ import keras
 # from sklearn.metrics import precision_recall_fscore_support
 # from sklearn.model_selection import KFold
 # import pickle
+import numpy as np
 import os
 
-import wwts_globals
+from midi_handlers.MidiLibrary import MidiLibrarySplit
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 
@@ -31,13 +31,13 @@ def create_model(name):
 
     # CREATE THE _model
     _model = keras.models.Sequential()
-    _model.add(keras.layers.LSTM(units=666, input_shape=(wwts_globals.NUM_STEPS, wwts_globals.NUM_FEATURES), return_sequences=True))
+    _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
     _model.add(keras.layers.Dropout(.555))
     _model.add(keras.layers.LSTM(units=444, return_sequences=True))
     _model.add(keras.layers.Dropout(.333))
     _model.add(keras.layers.LSTM(222))
     _model.add(keras.layers.Dropout(.111))
-    _model.add(keras.layers.Dense(units=wwts_globals.NUM_FEATURES))
+    _model.add(keras.layers.Dense(units=NUM_FEATURES))
     _model.compile(loss='mae', optimizer='adam')
     print(_model.summary())
 
@@ -75,7 +75,7 @@ def save_model_structure(_model, name):
         json_file.write(_model_json)
 
 
-def fit_model(_dataset, _model, name):
+def fit_model(_model, _dataset, name):
 
     logfile = "models/final.txt"
 
@@ -105,4 +105,9 @@ def fit_model(_dataset, _model, name):
 
 if __name__ == "__main__":
 
-    dataset =
+    model_name = "bach666555444333222111"
+    lib_path = "midi/bach_cleaned"
+
+    dataset = MidiLibrarySplit(lib_path)
+    model = create_model(model_name)
+    fit_model(model, dataset, model_name)
