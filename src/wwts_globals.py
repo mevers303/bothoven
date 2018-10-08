@@ -144,7 +144,7 @@ def progress_bar(done, total, text="", clear_when_done=False, resolution=0.25):
         i = 100
     else:
         # percentage done
-        i = done // total * 100
+        i = (done * 100) // total
 
     # go to beginning of our output
     if text and done > 0:
