@@ -18,7 +18,7 @@ class FixEndOfTrack(MidiTool):
         self.to_remove = []
 
 
-    def prerun_message_event(self, msg):
+    def message_event(self, msg):
 
         if msg.type == "end_of_track":
             self.to_remove.append(self.current_pos)
@@ -26,7 +26,7 @@ class FixEndOfTrack(MidiTool):
         self.current_pos += 1
 
 
-    def prerun_post_track_event(self, track):
+    def post_track_event(self, track):
 
         for position in self.to_remove[::-1]:
             del track[position]
