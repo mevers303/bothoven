@@ -34,7 +34,7 @@ class MiddleCTransposer(MidiTool):
 
     def message_event(self, msg):
 
-        if msg.type == "note_on" or msg.type == "note_off":
+        if (msg.type == "note_on" or msg.type == "note_off") and msg.channel != 9:
 
             note = msg.note
             note += self.note_transpose_interval
