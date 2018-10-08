@@ -17,7 +17,7 @@ import numpy as np
 import os
 import pickle
 
-from midi_handlers.MidiLibrary import MidiLibrarySplit
+from midi_handlers.MidiLibrary import MidiLibrarySplit, MidiLibraryFlat
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 
@@ -111,10 +111,15 @@ def main():
     lib_path = "midi/bach_cleaned"
     pickle_path = "midi/pickles/bach.pkl"
 
+    print("Loading dataset...")
     # dataset = MidiLibrarySplit(lib_path)
     with open(pickle_path, "rb") as f:
         dataset = pickle.load(f)
+
+    print("Creating model...")
     model = create_model(model_name)
+
+    print("Fitting model...")
     fit_model(model, dataset, model_name)
 
 
