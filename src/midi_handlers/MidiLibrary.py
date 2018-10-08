@@ -150,15 +150,17 @@ class MidiLibraryFlat(MidiLibrary):
         i = 0
         batch = []
 
-        for step in self.step_through():
+        while True:
 
-            if i >= BATCH_SIZE:
-                yield batch
-                batch.clear()
-                i = 0
+            for step in self.step_through():
 
-            batch.append(step)
-            i += 1
+                if i >= BATCH_SIZE:
+                    yield batch
+                    batch.clear()
+                    i = 0
+
+                batch.append(step)
+                i += 1
 
 
 
