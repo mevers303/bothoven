@@ -122,7 +122,7 @@ def to_reltime(messages):
 
 
 _progress_bar_last_time = 0
-def progress_bar(done, total, text="", clear_when_done=False, resolution=0.25):
+def progress_bar(done, total, text="", clear_when_done=False, resolution=0.333):
     """
     Prints a progress bar to stdout.
     :param done: Number of items complete
