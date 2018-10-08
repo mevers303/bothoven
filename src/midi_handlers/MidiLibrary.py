@@ -150,7 +150,6 @@ class MidiLibraryFlat(MidiLibrary):
 
 
 
-
 class MidiLibrarySplit(MidiLibrary):
 
     def __init__(self, base_dir):
@@ -171,7 +170,9 @@ class MidiLibrarySplit(MidiLibrary):
 
         self.filenames_train = self.filenames[train_indices]
         self.filenames_test = self.filenames[test_indices]
+        print("Buffering training set...")
         self.train_lib = MidiLibraryFlat(filenames=self.filenames_train)
+        print("Buffering test set...")
         self.test_lib = MidiLibraryFlat(filenames=self.filenames_test)
 
 
@@ -181,6 +182,7 @@ class MidiLibrarySplit(MidiLibrary):
 
     def step_through(self):
         pass
+
 
 
 
