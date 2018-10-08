@@ -3,6 +3,7 @@
 # MidiLibrary.py
 # Objects for managing a set of MIDI files.
 
+from abc import ABC, abstractmethod
 import numpy as np
 import mido
 import random
@@ -10,36 +11,52 @@ from sklearn.model_selection import train_test_split
 
 from files.file_functions import get_filenames
 import wwts_globals
+from wwts_globals import NUM_STEPS, NUM_FEATURES
 
 
 
-class MidiLibrary:
+class MidiLibrary(ABC):
 
-    def __init__(self, base_dir, autoload=True):
+    def __init__(self, base_dir="", filenames=None, autoload=True):
 
         self.base_dir = base_dir
         self.filenames = None
         self.midi = None
 
-        self.get_filenames()
+        if filenames:
+            self.filenames = filenames
+        else:
+            self.find_files()
+
         if autoload:
             self.load()
 
 
-    def get_filenames(self):
+    def find_files(self):
 
         self.filenames = np.array(get_filenames(self.base_dir))
         print("Found", self.filenames.size, "in", self.base_dir)
 
 
+    @abstractmethod
     def load(self):
+        pass
 
-        midi_buf = []
+
+    @abstractmethod
+    def step_through(self):
+        pass
+
+
+    @staticmethod
+    def load_files(filenames):
+
+        buf = []
         done = 0
 
-        for filename in self.filenames:
+        for filename in filenames:
 
-            wwts_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...")
+            wwts_globals.progress_bar(done, filenames.size, "Buffering " + filename + "...")
             done += 1
 
             try:
@@ -49,91 +66,25 @@ class MidiLibrary:
                 print(e)
                 continue
 
-            midi_buf.extend(self.mid_to_array(mid))
+            buf.extend(MidiLibrary.mid_to_array(mid))
 
-        wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!")
+        wwts_globals.progress_bar(done, filenames.size, "Buffering complete!")
 
-        self.midi = np.array(midi_buf)
-
-
-    @staticmethod
-    def step_through(mids):
-
-        for mid in mids:
-
-            for track in mid.tracks:
-
-                # time series matrix
-                buf = np.zeros((wwts_globals.NUM_STEPS, wwts_globals.NUM_FEATURES), dtype=np.uint32)
-                # set special one-hot for track_start
-                buf[-1, -2] = 1
-                # cumulative delta time from skipped notes
-                cum_time = 0
-
-                for msg in track:
-
-                    if not (msg.type == "note_on" or msg.type == "note_off") or msg.channel == 9:  # skip drum tracks
-                        # store the delta time of any skipped messages
-                        cum_time += msg.time
-                        continue
-
-                    # the next note beyond the buffer
-                    target = np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32)
-                    # set the time
-                    target[0] = msg.time + cum_time
-                    # reset skipped time delta
-                    cum_time = 0
-                    # find the one-hot note code
-                    note_code = msg.note + 1 if msg.type == "note_on" else msg.note + 128 + 1
-                    target[note_code] = 1
-                    # spit out this buffer
-                    yield buf.copy(), target
-
-                    # move the time series up one
-                    buf = np.roll(buf, -1, axis=0)
-                    # store this message as the last in the time series
-                    buf[-1] = target
-
-                # now this is the end of the track
-                # if there were actual usable messages in the track, end the track
-                if buf[-1, -2] != 1:
-                    # special one-hot for track end
-                    target = np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32)
-                    target[-1] = 1
-                    # yield the end of track
-                    yield buf.copy(), target
-                else:
-                    pass
-
-            print(len(mid.tracks), mid.filename)
-
-
-    @staticmethod
-    def step_through(mids):
-
-        for mid in mids:
-
-            for track in mid.tracks:
-
-
+        return np.array(buf, dtype=np.uint32)
 
 
     @staticmethod
     def mid_to_array(mid):
 
-        buf = []
-
         # empty space before each file
-        for _ in range(wwts_globals.NUM_STEPS):
-            buf.append(np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32))
-
-        # the start_track one hot
-        buf[-1][-2] = 1
+        buf = [np.zeros(NUM_FEATURES, dtype=np.uint32) for _ in range(NUM_STEPS - 1)]
 
         for track in mid.tracks:
 
             # cumulative delta time from skipped notes
             cum_time = 0
+            # need this to track start/end of track
+            found_a_note = False
 
             for msg in track:
 
@@ -142,7 +93,16 @@ class MidiLibrary:
                     cum_time += msg.time
                     continue
 
-                this_step = np.zeros(wwts_globals.NUM_FEATURES, dtype=np.uint32)
+                # it will never get here if it never finds a note
+                if not found_a_note:
+                    found_a_note = True
+                    # slide a start_track in there
+                    this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                    this_step[-2] = 1
+                    buf.append(this_step)
+
+                # the current step we are on
+                this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
                 this_step[0] = msg.time + cum_time
                 cum_time = 0
                 # find the one-hot note code
@@ -151,7 +111,47 @@ class MidiLibrary:
 
                 buf.append(this_step)
 
+            if found_a_note:
+                # slide a start_end in there
+                this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                this_step[-1] = 1
+                buf.append(this_step)
+
         return buf
+
+
+
+class MidiLibraryFlat(MidiLibrary):
+
+    def __init__(self, base_dir="", filenames=None, autoload=True):
+
+        super().__init__(base_dir, filenames, autoload)
+
+        self.buf = None
+
+
+    def load(self):
+        self.buf = self.load_files(self.filenames)
+
+
+    def step_through(self):
+
+        i = 0
+
+        while True:
+
+            # reset it when it gets to the end
+            if i >= self.buf.size - NUM_STEPS - 1:  # gotta leave room for the target at the end
+                i = 0
+
+            x = self.buf[i:i + NUM_STEPS]
+            y = self.buf[i + NUM_STEPS + 1]
+
+            i += 1
+
+            yield x, y
+
+
 
 
 class MidiLibrarySplit(MidiLibrary):
@@ -189,20 +189,20 @@ def main():
 
     import pickle
 
-    lib = MidiLibrarySplit("midi/bach_cleaned")
+    lib = MidiLibrarySplit("midi/short")
     lib.load()
 
-    with open("midi/pickles/bach.pkl", "wb") as f:
-        pickle.dump(lib, f)
+    # with open("midi/pickles/bach.pkl", "wb") as f:
+    #     pickle.dump(lib, f)
 
-    # with open("midi/pickles/bach.pkl", "rb") as f:
-    #     lib = pickle.load(f)
+    with open("midi/pickles/bach.pkl", "rb") as f:
+        lib = pickle.load(f)
 
-        # x = 0
-        #
-        # for buf, target in lib.step_through():
-        #     pass
-        #     # print("time:", str(time).rjust(5), "note: ", note)
+        x = 0
+
+        for buf, target in lib.step_through():
+            pass
+            # print("time:", str(time).rjust(5), "note: ", note)
 
 if __name__ == "__main__":
     main()
