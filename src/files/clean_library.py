@@ -19,10 +19,10 @@ from wwts_globals import progress_bar
 
 def main():
 
-    base_dir = "midi/classical/Bach"
-    out_dir = "midi/bach_cleaned"
+    base_dir = "/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/Metal_Rock_wolverine-metalmidi.wen.ru_MIDIRip"
+    out_dir = "midi/metal"
 
-    filenames = get_filenames("midi/classical/Bach")
+    filenames = get_filenames(base_dir)
     filenames_count = len(filenames)
     print("Found", filenames_count, "in", base_dir)
 
@@ -45,12 +45,13 @@ def main():
             print(e)
             continue
 
+        outfile = os.path.join(out_dir, os.path.basename(filename))
         try:
-            mid.save(os.path.join(out_dir, os.path.basename(filename)))
+            mid.save(outfile)
         except KeyboardInterrupt:
             exit(9)
         except Exception as e:
-            print("\nThere was an error saving", mid.save(os.path.basename(filename)))
+            print("\nThere was an error saving", outfile)
             print(e)
             continue
 
