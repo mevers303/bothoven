@@ -104,7 +104,8 @@ def fit_model(_model, _dataset, name):
 
 
 
-if __name__ == "__main__":
+
+def main():
 
     model_name = "bach666555444333222111"
     lib_path = "midi/bach_cleaned"
@@ -115,3 +116,8 @@ if __name__ == "__main__":
         dataset = pickle.load(f)
     model = create_model(model_name)
     fit_model(model, dataset, model_name)
+
+
+if __name__ == "__main__":
+
+    main()
