@@ -15,6 +15,7 @@ import keras
 # import pickle
 import numpy as np
 import os
+import pickle
 
 from midi_handlers.MidiLibrary import MidiLibrarySplit
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
@@ -49,8 +50,8 @@ def create_model(name):
 
 def load_model_structure(name):
 
-    structure_filename = os.path.join("src/models/", name, "model.json")
-    # weights_filename = os.path.join("src/models/", name, "epoch_" + epoch + ".h5")
+    structure_filename = os.path.join("models/", name, "model.json")
+    # weights_filename = os.path.join("models/", name, "epoch_" + epoch + ".h5")
 
 
     # load json and create _model
@@ -66,7 +67,7 @@ def load_model_structure(name):
 
 def save_model_structure(_model, name):
 
-    filename = os.path.join("src/models/", name, "model.json")
+    filename = os.path.join("models/", name, "model.json")
 
     print("Saving model to disk")
     # serialize _model to JSON
@@ -107,7 +108,10 @@ if __name__ == "__main__":
 
     model_name = "bach666555444333222111"
     lib_path = "midi/bach_cleaned"
+    pickle_path = "midi/pickles/bach.pkl"
 
-    dataset = MidiLibrarySplit(lib_path)
+    # dataset = MidiLibrarySplit(lib_path)
+    with open(pickle_path, "rb") as f:
+        dataset = pickle.load(f)
     model = create_model(model_name)
     fit_model(model, dataset, model_name)
