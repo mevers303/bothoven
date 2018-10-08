@@ -19,7 +19,7 @@ class MidiLibrary:
 
         self.base_dir = base_dir
         self.filenames = None
-        self.mids = None
+        self.midi = None
 
         self.get_filenames()
         if autoload:
@@ -34,20 +34,26 @@ class MidiLibrary:
 
     def load(self):
 
-        midi_files = []
+        midi_buf = []
         done = 0
 
         for filename in self.filenames:
+
+            wwts_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...")
+            done += 1
+
             try:
-                midi_files.append(mido.MidiFile(filename))
+                mid = mido.MidiFile(filename)
             except Exception as e:
                 print("\nThere was an error reading", filename)
                 print(e)
-            finally:
-                done += 1
-                wwts_globals.progress_bar(done, self.filenames.size)
+                continue
 
-        self.mids = np.array(midi_files)
+            midi_buf.extend(self.mid_to_array(mid))
+
+        wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!")
+
+        self.midi = np.array(midi_buf)
 
 
     @staticmethod
@@ -103,6 +109,16 @@ class MidiLibrary:
 
 
     @staticmethod
+    def step_through(mids):
+
+        for mid in mids:
+
+            for track in mid.tracks:
+
+
+
+
+    @staticmethod
     def mid_to_array(mid):
 
         buf = []
@@ -134,6 +150,8 @@ class MidiLibrary:
                 this_step[note_code] = 1
 
                 buf.append(this_step)
+
+        return buf
 
 
 class MidiLibrarySplit(MidiLibrary):
