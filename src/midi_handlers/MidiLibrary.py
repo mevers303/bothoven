@@ -153,7 +153,7 @@ class MidiLibraryFlat(MidiLibrary):
 
             for x, y in self.step_through():
 
-                y = {"note_branch": y[:256], "time_branch": y[-1]}
+                y = {"note_branch": y[:-1], "time_branch": y[-1]}
 
                 if i >= BATCH_SIZE:
                     yield np.array(batch_x), np.array(batch_y)
