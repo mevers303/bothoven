@@ -87,12 +87,6 @@ def fit_model(_model, _dataset):
 
     logfile = os.path.join("models/", _model.name, "log.txt")
 
-    print("Training model...")
-    with open(logfile, "w") as f:
-        f.write("***** Model *****\n")
-        f.write("Neurons: 666 -> 444 -> 222\n")
-        f.write("Dropout: .555 -> .333 -> .111\n\n")
-
     steps_per_epoch = (_dataset.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
     model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:02d}-{loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
@@ -113,7 +107,7 @@ def fit_model(_model, _dataset):
 def main():
 
     lib_name = "metallica"
-    model_name = "metallica_666555444333222111"
+    model_name = "metallica_666444"
 
     if not os.path.exists(f"models/{model_name}"):
         os.mkdir(f"models/{model_name}")
