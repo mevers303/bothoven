@@ -38,13 +38,13 @@ def create_model(name):
 
     # CREATE THE _model
     inputs = keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES))
-    x = keras.layers.LSTM(units=666, return_sequences=True)(inputs)
+    x = keras.layers.LSTM(units=666)(inputs)
     x = keras.layers.Dropout(.444)(x)
 
     note_branch = keras.layers.Dense(units=(NUM_FEATURES - 1), activation="softmax", name="note_branch")(x)
     time_branch = keras.layers.Dense(units=1, activation="relu", name="time_branch")(x)
 
-    _model = keras.models.Model(inputs=inputs, outputs=[note_branch, time_branch])
+    _model = keras.models.Model(inputs=inputs, outputs=[note_branch, time_branch], name=name)
     _model.compile(loss=["categorical_crossentropy", "mae"], optimizer="adam")
 
     print(_model.summary())

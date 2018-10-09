@@ -147,27 +147,29 @@ class MidiLibraryFlat(MidiLibrary):
 
         i = 0
         batch_x = []
-        batch_y = []
+        batch_y_notes = []
+        batch_y_time= []
 
         while True:
 
             for x, y in self.step_through():
 
-                y = {"note_branch": y[:-1], "time_branch": y[-1]}
-
                 if i >= BATCH_SIZE:
-                    yield np.array(batch_x), np.array(batch_y)
+                    yield np.array(batch_x), {"note_branch": np.array(batch_y_notes), "time_branch": np.array(batch_y_time)}
                     batch_x.clear()
-                    batch_y.clear()
+                    batch_y_notes.clear()
+                    batch_y_time.clear()
                     i = 0
 
                 batch_x.append(x)
-                batch_y.append(y)
+                batch_y_notes.append(y[:-1])
+                batch_y_time.append(y[-1])
                 i += 1
 
-            yield np.array(batch_x), np.array(batch_y)
+            yield np.array(batch_x), {"note_branch": np.array(batch_y_notes), "time_branch": np.array(batch_y_time)}
             batch_x.clear()
-            batch_y.clear()
+            batch_y_notes.clear()
+            batch_y_time.clear()
             i = 0
 
 
