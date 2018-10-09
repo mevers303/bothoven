@@ -39,12 +39,14 @@ def create_model(name):
     # CREATE THE _model
     inputs = keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES))
     x = keras.layers.LSTM(units=666, return_sequences=True)(inputs)
+    x = keras.layers.Dropout(.555)(x)
+    x = keras.layers.LSTM(units=444, return_sequences=True)(x)
     x = keras.layers.Dropout(.333)(x)
-    x = keras.layers.LSTM(units=666)(x)
-    x = keras.layers.Dropout(.333)(x)
+    x = keras.layers.LSTM(units=222)(x)
+    x = keras.layers.Dropout(.111)(x)
 
     note_branch = keras.layers.Dense(units=(NUM_FEATURES - 1), activation="softmax", name="note_branch")(x)
-    time_branch = keras.layers.Dense(units=1, activation="relu", name="time_branch")(x)
+    time_branch = keras.layers.Dense(units=1, activation="linear", name="time_branch")(x)
 
     _model = keras.models.Model(inputs=inputs, outputs=[note_branch, time_branch], name=name)
     _model.compile(loss={"note_branch": "categorical_crossentropy", "time_branch": "mse"}, loss_weights={"note_branch": 0.05, "time_branch":1.11e4}, optimizer="adam")
@@ -109,7 +111,7 @@ def fit_model(_model, _dataset):
 def main():
 
     lib_name = "metallica"
-    model_name = "metallica_666444"
+    model_name = "metallica_666444333222111"
 
     if not os.path.exists(f"models/{model_name}"):
         os.mkdir(f"models/{model_name}")
