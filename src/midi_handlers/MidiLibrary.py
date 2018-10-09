@@ -94,12 +94,12 @@ class MidiLibrary(ABC):
                     found_a_note = True
                     # slide a start_track in there
                     this_step = np.zeros(NUM_FEATURES)
-                    this_step[-2] = 1
+                    this_step[-3] = 1
                     buf.append(this_step)
 
                 # the current step we are on
                 this_step = np.zeros(NUM_FEATURES)
-                this_step[-3] = msg.time + cum_time
+                this_step[-1] = msg.time + cum_time
                 cum_time = 0
                 # find the one-hot note code
                 note_code = msg.note if msg.type == "note_on" else msg.note + 128
@@ -110,7 +110,7 @@ class MidiLibrary(ABC):
             if found_a_note:
                 # slide a start_end in there
                 this_step = np.zeros(NUM_FEATURES)
-                this_step[-1] = 1
+                this_step[-2] = 1
                 buf.append(this_step)
 
         return buf
@@ -152,6 +152,8 @@ class MidiLibraryFlat(MidiLibrary):
         while True:
 
             for x, y in self.step_through():
+
+                y = {"note_branch": y[:256], "time_branch": y[-1]}
 
                 if i >= BATCH_SIZE:
                     yield np.array(batch_x), np.array(batch_y)
