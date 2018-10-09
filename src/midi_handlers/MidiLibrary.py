@@ -66,14 +66,14 @@ class MidiLibrary(ABC):
 
         wwts_globals.progress_bar(done, filenames.size, "Buffering complete!", clear_when_done=True)
 
-        return np.array(buf, dtype=np.uint32)
+        return np.array(buf)
 
 
     @staticmethod
     def mid_to_array(mid):
 
         # empty space before each file
-        buf = [np.zeros(NUM_FEATURES, dtype=np.uint32) for _ in range(NUM_STEPS - 1)]
+        buf = [np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)]
 
         for track in mid.tracks:
 
@@ -93,12 +93,12 @@ class MidiLibrary(ABC):
                 if not found_a_note:
                     found_a_note = True
                     # slide a start_track in there
-                    this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                    this_step = np.zeros(NUM_FEATURES)
                     this_step[-2] = 1
                     buf.append(this_step)
 
                 # the current step we are on
-                this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                this_step = np.zeros(NUM_FEATURES)
                 this_step[-3] = msg.time + cum_time
                 cum_time = 0
                 # find the one-hot note code
@@ -109,7 +109,7 @@ class MidiLibrary(ABC):
 
             if found_a_note:
                 # slide a start_end in there
-                this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                this_step = np.zeros(NUM_FEATURES)
                 this_step[-1] = 1
                 buf.append(this_step)
 
@@ -154,7 +154,7 @@ class MidiLibraryFlat(MidiLibrary):
             for x, y in self.step_through():
 
                 if i >= BATCH_SIZE:
-                    yield np.array(batch_x, dtype=np.uint32), np.array(batch_y, dtype=np.uint32)
+                    yield np.array(batch_x), np.array(batch_y)
                     batch_x.clear()
                     batch_y.clear()
                     i = 0
@@ -163,7 +163,7 @@ class MidiLibraryFlat(MidiLibrary):
                 batch_y.append(y)
                 i += 1
 
-            yield np.array(batch_x, dtype=np.uint32), np.array(batch_y, dtype=np.uint32)
+            yield np.array(batch_x), np.array(batch_y)
             batch_x.clear()
             batch_y.clear()
             i = 0

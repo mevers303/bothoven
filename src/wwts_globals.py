@@ -19,8 +19,9 @@ MAXIMUM_WORKS = 120
 # How many ticks per beat should each track be converted to?
 TICKS_PER_BEAT = 1920
 # The resolution of music notes
-MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 2**4  # 128th notes
-MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**3  # 128th note triplets
+MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 2**4  # 64th notes
+MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**3  # 64th note triplets
+MAXIMUM_NOTE_LENGTH = TICKS_PER_BEAT * 8   # two whole notes
 
 # the number of steps in the model
 NUM_STEPS = 64
@@ -30,7 +31,7 @@ NUM_FEATURES = 256 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
 N_EPOCHS = 20
 # the batch size for training
 BATCH_SIZE = 64
-
+# T
 
 
 
@@ -55,8 +56,53 @@ KEY_SIGNATURES = [[ 0,  2,  4,  5 , 7,  9, 11],  # C
                   [11,  1,  3,  4,  6,  8, 10]]  # B
 
 
+# create a list of all the possible not durations to use to bin message durations into later on
+this_bin = MAXIMUM_NOTE_LENGTH
+DURATION_BINS = [this_bin]
+
+while this_bin > MINIMUM_NOTE_LENGTH:
+    # divide by half to get the next smallest note
+    this_bin_duplet = int(this_bin / 2)
+    this_bin_triplet = int(this_bin / 3)
+    # add the dotted note duration first cause it's bigger
+    DURATION_BINS.append(int(this_bin_duplet * 1.5))
+    DURATION_BINS.append(int(this_bin_triplet * 1.5))
+    DURATION_BINS.append(int(this_bin_duplet))
+    DURATION_BINS.append(int(this_bin_triplet))
+
+    this_bin = this_bin_duplet
+
 
 ####################### FUNCTIONS #######################
+def bin_note_duration(duration):
+    """
+    Rounds the duration to the closest value in DURATION_BINS
+    :param duration: This note's duration
+    :return: A new duration in ticks
+    """
+
+    smallest_difference = MAXIMUM_NOTE_LENGTH
+    best_match = MAXIMUM_NOTE_LENGTH
+
+    for bin in DURATION_BINS:
+
+        difference = abs(duration - bin)
+
+        if not difference:
+            # they're equal
+            return bin
+        elif difference < smallest_difference:
+            # find the whichever bin it's closest to
+            smallest_difference = difference
+            best_match = bin
+        elif difference > smallest_difference:
+            # we passed our bin
+            return best_match
+
+    # this should never execute but just for sanity's sake
+    return best_match
+
+
 def dump_tracks(midi_file):
     """
     Prints all the tracks in a mido MidiFile object.

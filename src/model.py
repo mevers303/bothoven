@@ -24,19 +24,32 @@ np.random.seed(777)
 
 def create_model(name):
 
+    # # CREATE THE _model
+    # _model = keras.models.Sequential()
+    # _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
+    # _model.add(keras.layers.Dropout(.555))
+    # _model.add(keras.layers.LSTM(units=444, return_sequences=True))
+    # _model.add(keras.layers.Dropout(.333))
+    # _model.add(keras.layers.LSTM(222))
+    # _model.add(keras.layers.Dropout(.111))
+    # _model.add(keras.layers.Dense(units=NUM_FEATURES))
+    # _model.compile(loss='mae', optimizer='adam')
+    # print(_model.summary())
+
     # CREATE THE _model
-    _model = keras.models.Sequential()
-    _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
-    _model.add(keras.layers.Dropout(.555))
-    _model.add(keras.layers.LSTM(units=444, return_sequences=True))
-    _model.add(keras.layers.Dropout(.333))
-    _model.add(keras.layers.LSTM(222))
-    _model.add(keras.layers.Dropout(.111))
-    _model.add(keras.layers.Dense(units=NUM_FEATURES))
-    _model.compile(loss='mae', optimizer='adam')
+    inputs = keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES))
+    x = keras.layers.LSTM(units=666, return_sequences=True)(inputs)
+    x = keras.layers.Dropout(.444)(x)
+
+    note_branch = keras.layers.Dense(units=(NUM_FEATURES - 1), activation="softmax", name="note_branch")(x)
+    time_branch = keras.layers.Dense(units=1, activation="relu", name="time_branch")(x)
+
+    _model = keras.models.Model(inputs=inputs, outputs=[note_branch, time_branch])
+    _model.compile(loss=["categorical_crossentropy", "mae"], optimizer="adam")
+
     print(_model.summary())
 
-    save_model_structure(_model, name)
+    save_model_structure(_model)
 
     return _model
 
@@ -59,9 +72,9 @@ def load_model_structure(name):
     return _model
 
 
-def save_model_structure(_model, name):
+def save_model_structure(_model):
 
-    filename = os.path.join("models/", name, "model.json")
+    filename = os.path.join("models/", _model.name, "model.json")
 
     print("Saving model to disk...")
     # serialize _model to JSON
@@ -70,9 +83,9 @@ def save_model_structure(_model, name):
         json_file.write(_model_json)
 
 
-def fit_model(_model, _dataset, name):
+def fit_model(_model, _dataset):
 
-    logfile = os.path.join("models/", name, "log.txt")
+    logfile = os.path.join("models/", _model.name, "log.txt")
 
     print("Training model...")
     with open(logfile, "w") as f:
@@ -81,7 +94,7 @@ def fit_model(_model, _dataset, name):
         f.write("Dropout: .555 -> .333 -> .111\n\n")
 
     steps_per_epoch = (_dataset.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
-    model_save_filepath = os.path.join("models/", name, "epoch_{epoch:02d}-{val_loss:.2f}.hdf5")
+    model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:02d}-{loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
     history = _model.fit_generator(_dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks)
@@ -114,7 +127,7 @@ def main():
         dataset = pickle.load(f)
 
     print("Fitting model...")
-    fit_model(model, dataset, model_name)
+    fit_model(model, dataset)
 
 
 if __name__ == "__main__":
