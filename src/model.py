@@ -45,7 +45,7 @@ def create_model(name):
     time_branch = keras.layers.Dense(units=1, activation="relu", name="time_branch")(x)
 
     _model = keras.models.Model(inputs=inputs, outputs=[note_branch, time_branch], name=name)
-    _model.compile(loss=["categorical_crossentropy", "mae"], optimizer="adam")
+    _model.compile(loss={"note_branch": "categorical_crossentropy", "time_branch": "mse"}, loss_weights={"note_branch": 0.05, "time_branch":1e4}, optimizer="adam")
 
     print(_model.summary())
 
