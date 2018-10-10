@@ -7,7 +7,7 @@ from midi_handlers.MidiLibrary import MidiLibraryFlat
 
 lib_name = "metallica"
 
-model = keras.models.load_model("/media/mark/Data/Documents/python/bothoven/models/metallica_666444/epoch_20-8.93.hdf5")
+model = keras.models.load_model("/media/mark/Data/Documents/python/bothoven/models/metallica_666444666444/epoch_14-397.05.hdf5")
 print("Loading dataset...")
 with open(f"midi/pickles/{lib_name}.pkl", "rb") as f:
     dataset = pickle.load(f)
