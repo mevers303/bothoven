@@ -19,14 +19,14 @@ from wwts_globals import progress_bar
 
 def main():
 
-    base_dir = "/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/Metal_Rock_rock.freemidis.net_MIDIRip/midi/m/metallica"
+    base_dir = "/home/mark/Documents/midi/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]/Metal_Rock_wolverine-metalmidi.wen.ru_MIDIRip/Metallica"
     out_dir = "midi/metallica"
 
     filenames = get_filenames(base_dir)
     filenames_count = len(filenames)
     print("Found", filenames_count, "in", base_dir)
 
-    toolbox = MidiToolbox([TickTransposer, Type1Converter, Type0Converter, Quantizer, NoteSorter, NoteOnToNoteOff, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer])
+    toolbox = MidiToolbox([TickTransposer, Type1Converter, Quantizer, NoteSorter, NoteOnToNoteOff, RemoveEmptySpaceBefore, OpenNoteFixer, FixEndOfTrack, MiddleCTransposer])
     print("Toolbox loaded")
 
     done = 0
