@@ -18,12 +18,12 @@ class MidiToArrayBuilder:
 
         mid = music21.converter.parse(self.filename, quantizePost=False)
 
-        for track in mid.parts:
+        for part in mid.parts:
 
             # need this to track start/end of track
             found_a_note = False
 
-            for msg in track.notesAndRests:
+            for msg in part.notesAndRests:
 
                 # it will never get here if it never finds a note
                 if not found_a_note:
@@ -48,13 +48,13 @@ class MidiToArrayBuilder:
 
         # find the one-hot note
         if msg.isNote:
-            self.note_step(msg.pitch.midi, msg.quarterLength)
+            self.note_step(msg.pitch.midi, msg.quarterLength, msg.beat)
         elif msg.isRest:
-            self.note_step(128, msg.quarterLength)
+            self.note_step(128, msg.quarterLength, msg.beat)
         elif msg.isChord:
             self.special_step(-4)  # chord_start one-hot
             for note in msg._notes:
-                self.note_step(note.pitch.midi, note.quarterLength)
+                self.note_step(note.pitch.midi, note.quarterLength, msg.beat)
             self.special_step(-3)  # chord_end one-hot
         else:
             raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
@@ -82,11 +82,12 @@ class MidiToArrayBuilder:
         self.buf.append(this_step)
 
 
-    def note_step(self, note_i, duration):
+    def note_step(self, note_i, duration, beat):
 
         this_step = np.zeros(NUM_FEATURES)
 
         this_step[note_i] = 1  # the midi note one-hot
         this_step[129 + get_note_duration_bin(duration)] = 1  # the duration one-hot
+        this_step[-5] = beat  #
 
         self.buf.append(this_step)
