@@ -96,7 +96,7 @@ class MidiLibrary(ABC):
                 elif msg.isChord:
                     buf.append(MidiLibrary.special_step(-4))
                     for note in msg._notes:
-                        buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength, chord=True))
+                        buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength))
                     buf.append(MidiLibrary.special_step(-3))
                 else:
                     raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
@@ -120,7 +120,7 @@ class MidiLibrary(ABC):
         return this_step
 
     @staticmethod
-    def build_step(note_i, duration, chord=False):
+    def build_step(note_i, duration):
 
         # find the one-hot note duration
         duration_i = wwts_globals.get_note_duration_bin(duration)
@@ -129,8 +129,6 @@ class MidiLibrary(ABC):
         this_step = np.zeros(NUM_FEATURES)
         this_step[note_i] = 1
         this_step[129 + duration_i] = 1
-        if chord:
-            this_step[129 + len(wwts_globals.DURATION_BINS)] = 1
 
         return this_step
 
