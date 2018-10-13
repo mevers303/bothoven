@@ -72,6 +72,8 @@ class MidiLibrary(ABC):
     @staticmethod
     def mid_to_array(mid):
 
+        # TODO: Code for handling too large durations
+
         # empty space before each file
         buf = [np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)]
 

@@ -22,7 +22,7 @@ np.random.seed(777)
 def create_model(name):
 
     # CREATE THE _model
-    _model = keras.models.Sequential()
+    _model = keras.models.Sequential(name=name)
     _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
     _model.add(keras.layers.Dropout(.555))
     _model.add(keras.layers.LSTM(units=444, return_sequences=True))
