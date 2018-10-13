@@ -8,26 +8,12 @@ from time import time
 
 
 
-####################### OPTIONS #########################
-######### FEATURES
-# How many pieces must a composer have for us to consider them?
-
-###### HYPER PARAMETERS
+####################### HYPER-PARAMETERS #########################
 # The resolution of music notes for music21.  This is in quarter notes
 MAXIMUM_NOTE_LENGTH = 8  # two whole notes
 # These are quarter note divisors
 MINIMUM_NOTE_LENGTH = 16  # 64th notes
 MINIMUM_NOTE_LENGTH_TRIPLETS = 8 * 3  # 64th note triplets
-
-# the number of steps in the model
-NUM_STEPS = 64
-# the number of features for the model
-NUM_FEATURES = 128 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
-# number of epochs to train for
-N_EPOCHS = 20
-# the batch size for training
-BATCH_SIZE = 64
-
 
 
 # create a list of all the possible not durations to use to bin message durations into later on
@@ -46,6 +32,16 @@ while this_bin > 4 / MINIMUM_NOTE_LENGTH:
     DURATION_BINS.append(this_bin_triplet)
 
 del this_bin  # get up on outta here
+
+
+# the number of steps in the model
+NUM_STEPS = 64
+# the number of features for the model
+NUM_FEATURES = 128 + len(DURATION_BINS) + 2  # midi notes + time bins + 2 track start/end
+# number of epochs to train for
+N_EPOCHS = 20
+# the batch size for training
+BATCH_SIZE = 64
 
 
 
