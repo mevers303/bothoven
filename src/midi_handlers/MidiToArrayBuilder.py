@@ -53,8 +53,8 @@ class MidiToArrayBuilder:
             self.note_step(128, msg.quarterLength)
         elif msg.isChord:
             self.special_step(-4)  # chord_start one-hot
-            for pitch in msg.pitches:
-                self.note_step(pitch.midi, msg.quarterLength)
+            for note in msg._notes:
+                self.note_step(note.pitch.midi, note.quarterLength)
             self.special_step(-3)  # chord_end one-hot
         else:
             raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
