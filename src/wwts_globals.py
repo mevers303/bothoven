@@ -11,27 +11,41 @@ from time import time
 ####################### OPTIONS #########################
 ######### FEATURES
 # How many pieces must a composer have for us to consider them?
-MINIMUM_WORKS = 100
-# How many pieces will we use from each composer?
-MAXIMUM_WORKS = 120
 
 ###### HYPER PARAMETERS
-# How many ticks per beat should each track be converted to?
-TICKS_PER_BEAT = 1920
-# The resolution of music notes
-MINIMUM_NOTE_LENGTH = TICKS_PER_BEAT / 2**4  # 128th notes
-MINIMUM_NOTE_LENGTH_TRIPLETS = TICKS_PER_BEAT / 3 / 2**3  # 128th note triplets
+# The resolution of music notes for music21.  This is in quarter notes
+MAXIMUM_NOTE_LENGTH = 8  # two whole notes
+# These are quarter note divisors
+MINIMUM_NOTE_LENGTH = 16  # 64th notes
+MINIMUM_NOTE_LENGTH_TRIPLETS = 8 * 3  # 64th note triplets
 
 # the number of steps in the model
 NUM_STEPS = 64
 # the number of features for the model
-NUM_FEATURES = 256 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
+NUM_FEATURES = 128 + 1 + 2  # 256 note on/off + 1 time + 2 track start/end
 # number of epochs to train for
 N_EPOCHS = 20
 # the batch size for training
 BATCH_SIZE = 64
 
 
+
+# create a list of all the possible not durations to use to bin message durations into later on
+this_bin = MAXIMUM_NOTE_LENGTH
+DURATION_BINS = [this_bin]
+
+while this_bin > 4 / MINIMUM_NOTE_LENGTH:
+    # divide by half to get the next smallest note
+    this_bin = int(this_bin / 2)
+    # and triplets
+    this_bin_triplet = int(this_bin / 3)
+    # add the dotted note duration first cause it's bigger
+    DURATION_BINS.append(this_bin * 1.5)
+    # DURATION_BINS.append(this_bin_triplet * 1.5)  # unnecessary because a dotted triplet is equal to a regular duplet
+    DURATION_BINS.append(this_bin)
+    DURATION_BINS.append(this_bin_triplet)
+
+del this_bin  # get up on outta here
 
 
 
@@ -57,6 +71,35 @@ KEY_SIGNATURES = [[ 0,  2,  4,  5 , 7,  9, 11],  # C
 
 
 ####################### FUNCTIONS #######################
+def bin_note_duration(duration):
+    """
+    Rounds the duration to the closest value in DURATION_BINS
+    :param duration: This note's duration
+    :return: A new duration in ticks
+    """
+
+    smallest_difference = MAXIMUM_NOTE_LENGTH
+    best_match = MAXIMUM_NOTE_LENGTH
+
+    for bin in DURATION_BINS:
+
+        difference = abs(duration - bin)
+
+        if not difference:
+            # they're equal
+            return bin
+        elif difference < smallest_difference:
+            # find the whichever bin it's closest to
+            smallest_difference = difference
+            best_match = bin
+        elif difference > smallest_difference:
+            # we passed our bin
+            return best_match
+
+    # this should never execute but just for sanity's sake
+    return best_match
+
+
 def dump_tracks(midi_file):
     """
     Prints all the tracks in a mido MidiFile object.
