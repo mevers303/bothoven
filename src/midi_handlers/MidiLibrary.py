@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-import mido
+import music21
 
 from files.file_functions import get_filenames
 import wwts_globals
@@ -56,7 +56,7 @@ class MidiLibrary(ABC):
             done += 1
 
             try:
-                mid = mido.MidiFile(filename)
+                mid = music21.converter.parse(filename)
             except Exception as e:
                 print("\nThere was an error reading", filename)
                 print(e)
@@ -66,54 +66,68 @@ class MidiLibrary(ABC):
 
         wwts_globals.progress_bar(done, filenames.size, "Buffering complete!", clear_when_done=True)
 
-        return np.array(buf, dtype=np.uint32)
+        return np.array(buf)
 
 
     @staticmethod
     def mid_to_array(mid):
 
         # empty space before each file
-        buf = [np.zeros(NUM_FEATURES, dtype=np.uint32) for _ in range(NUM_STEPS - 1)]
+        buf = [np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)]
 
-        for track in mid.tracks:
+        for track in mid.parts:
 
-            # cumulative delta time from skipped notes
-            cum_time = 0
             # need this to track start/end of track
             found_a_note = False
 
-            for msg in track:
-
-                if not (msg.type == "note_on" or msg.type == "note_off") or msg.channel == 9:  # skip drum tracks
-                    # store the delta time of any skipped messages
-                    cum_time += msg.time
-                    continue
+            for msg in track.notesAndRests:
 
                 # it will never get here if it never finds a note
                 if not found_a_note:
                     found_a_note = True
                     # slide a start_track in there
-                    this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                    this_step = np.zeros(NUM_FEATURES)
                     this_step[-2] = 1
                     buf.append(this_step)
 
-                # the current step we are on
-                this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
-                this_step[-3] = msg.time + cum_time
-                cum_time = 0
-                # find the one-hot note code
-                note_code = msg.note if msg.type == "note_on" else msg.note + 128
-                this_step[note_code] = 1
-
-                buf.append(this_step)
+                # find the one-hot note
+                if msg.isNote:
+                    buf.append(MidiLibrary.build_step(msg.pitch.midi, msg.quarterLength))
+                elif msg.isRest:
+                    buf.append(MidiLibrary.build_step(128, msg.quarterLength))
+                elif msg.isChord:
+                    for note in msg.notes:
+                        buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength, chord=True))
+                    pass
+                else:
+                    raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
 
             if found_a_note:
                 # slide a start_end in there
-                this_step = np.zeros(NUM_FEATURES, dtype=np.uint32)
+                this_step = np.zeros(NUM_FEATURES)
                 this_step[-1] = 1
                 buf.append(this_step)
 
+        if len(buf) == 63:
+            raise Exception("No notes found in the MIDI file!")
+
         return buf
+
+
+    @staticmethod
+    def build_step(note_i, duration, chord=False):
+
+        # find the one-hot note duration
+        duration_i = wwts_globals.get_note_duration_bin(duration)
+
+        # buffer for the current step we are on
+        this_step = np.zeros(NUM_FEATURES)
+        this_step[note_i] = 1
+        this_step[129 + duration_i] = 1
+        if chord:
+            this_step[129 + len(wwts_globals.DURATION_BINS)] = 1
+
+        return this_step
 
 
 
@@ -154,7 +168,7 @@ class MidiLibraryFlat(MidiLibrary):
             for x, y in self.step_through():
 
                 if i >= BATCH_SIZE:
-                    yield np.array(batch_x, dtype=np.uint32), np.array(batch_y, dtype=np.uint32)
+                    yield np.array(batch_x), np.array(batch_y)
                     batch_x.clear()
                     batch_y.clear()
                     i = 0
@@ -163,7 +177,7 @@ class MidiLibraryFlat(MidiLibrary):
                 batch_y.append(y)
                 i += 1
 
-            yield np.array(batch_x, dtype=np.uint32), np.array(batch_y, dtype=np.uint32)
+            yield np.array(batch_x), np.array(batch_y)
             batch_x.clear()
             batch_y.clear()
             i = 0

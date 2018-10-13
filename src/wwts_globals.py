@@ -37,7 +37,7 @@ del this_bin  # get up on outta here
 # the number of steps in the model
 NUM_STEPS = 64
 # the number of features for the model
-NUM_FEATURES = 128 + 1 + len(DURATION_BINS) + 2  # midi notes + rest note + time bins + 2 track start/end
+NUM_FEATURES = 128 + 1 + len(DURATION_BINS) + 1 + 2  # midi notes + rest note + time bins + 1 chord switch + 2 track start/end
 # number of epochs to train for
 N_EPOCHS = 20
 # the batch size for training
