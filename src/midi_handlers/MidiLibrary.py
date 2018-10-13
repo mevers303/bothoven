@@ -86,9 +86,7 @@ class MidiLibrary(ABC):
                 if not found_a_note:
                     found_a_note = True
                     # slide a start_track in there
-                    this_step = np.zeros(NUM_FEATURES)
-                    this_step[-2] = 1
-                    buf.append(this_step)
+                    buf.append(MidiLibrary.special_step(-2))
 
                 # find the one-hot note
                 if msg.isNote:
@@ -96,22 +94,16 @@ class MidiLibrary(ABC):
                 elif msg.isRest:
                     buf.append(MidiLibrary.build_step(128, msg.quarterLength))
                 elif msg.isChord:
-                    this_step = np.zeros(NUM_FEATURES)
-                    this_step[-4] = 1
-                    buf.append(this_step)
+                    buf.append(MidiLibrary.special_step(-4))
                     for note in msg._notes:
                         buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength, chord=True))
-                    this_step = np.zeros(NUM_FEATURES)
-                    this_step[-3] = 1
-                    buf.append(this_step)
+                    buf.append(MidiLibrary.special_step(-3))
                 else:
                     raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
 
             if found_a_note:
                 # slide a start_end in there
-                this_step = np.zeros(NUM_FEATURES)
-                this_step[-1] = 1
-                buf.append(this_step)
+                buf.append(MidiLibrary.special_step(-1))
 
         if len(buf) == 63:
             # raise Exception("No notes found in the MIDI file!")
@@ -119,6 +111,13 @@ class MidiLibrary(ABC):
 
         return buf
 
+
+    @staticmethod
+    def special_step(i):
+
+        this_step = np.zeros(NUM_FEATURES)
+        this_step[i] = 1
+        return this_step
 
     @staticmethod
     def build_step(note_i, duration, chord=False):
