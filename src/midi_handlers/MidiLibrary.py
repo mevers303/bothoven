@@ -96,7 +96,7 @@ class MidiLibrary(ABC):
                 elif msg.isRest:
                     buf.append(MidiLibrary.build_step(128, msg.quarterLength))
                 elif msg.isChord:
-                    for note in msg.notes:
+                    for note in msg._notes:
                         buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength, chord=True))
                     pass
                 else:
@@ -109,7 +109,8 @@ class MidiLibrary(ABC):
                 buf.append(this_step)
 
         if len(buf) == 63:
-            raise Exception("No notes found in the MIDI file!")
+            # raise Exception("No notes found in the MIDI file!")
+            return []
 
         return buf
 
