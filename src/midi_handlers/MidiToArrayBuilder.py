@@ -1,7 +1,8 @@
+import copy
 import numpy as np
-import music21.converter
+import music21
 
-from wwts_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin
+from wwts_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin, MAXIMUM_NOTE_LENGTH
 
 
 
@@ -14,8 +15,6 @@ class MidiToArrayBuilder:
 
 
     def mid_to_array(self):
-
-        # TODO: Code for handling too large durations
 
         mid = music21.converter.parse(self.filename, quantizePost=False)
 
@@ -31,6 +30,10 @@ class MidiToArrayBuilder:
                     found_a_note = True
                     self.buf.extend([np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)])  # the empty buf at the beginning
                     self.special_step(-2)  # start_track one-hot
+
+                # truncate long messages and pad the end with one or more rests
+                while msg.quarterLength > MAXIMUM_NOTE_LENGTH:
+                        msg = self.parse_too_long_msg(msg)
 
                 self.parse_msg(msg)
 
@@ -56,6 +59,20 @@ class MidiToArrayBuilder:
         else:
             raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
 
+
+    def parse_too_long_msg(self, msg):
+
+        # sanity check
+        if msg.quarterLength <= MAXIMUM_NOTE_LENGTH:
+            return msg
+
+        # create a copy of the note and change the duration, then parse that instead
+        new_msg = copy.deepcopy(msg)
+        new_msg.quarterLength = MAXIMUM_NOTE_LENGTH
+        self.parse_msg(new_msg)
+
+        # turn the message into a rest and return it
+        return music21.note.Rest(quarterLength=msg.quarterLength - MAXIMUM_NOTE_LENGTH)
 
 
     def special_step(self, i):
