@@ -37,7 +37,7 @@ del this_bin  # get up on outta here
 # the number of steps in the model
 NUM_STEPS = 64
 # the number of features for the model
-NUM_FEATURES = 128 + len(DURATION_BINS) + 2  # midi notes + time bins + 2 track start/end
+NUM_FEATURES = 128 + 1 + len(DURATION_BINS) + 2  # midi notes + rest note + time bins + 2 track start/end
 # number of epochs to train for
 N_EPOCHS = 20
 # the batch size for training
@@ -67,7 +67,7 @@ KEY_SIGNATURES = [[ 0,  2,  4,  5 , 7,  9, 11],  # C
 
 
 ####################### FUNCTIONS #######################
-def bin_note_duration(duration):
+def get_note_duration_bin(duration):
     """
     Rounds the duration to the closest value in DURATION_BINS
     :param duration: This note's duration
@@ -75,25 +75,25 @@ def bin_note_duration(duration):
     """
 
     smallest_difference = MAXIMUM_NOTE_LENGTH
-    best_match = MAXIMUM_NOTE_LENGTH
+    best_match_i = 0
 
-    for bin in DURATION_BINS:
+    for i in range(len(DURATION_BINS)):
 
-        difference = abs(duration - bin)
+        difference = abs(duration - DURATION_BINS[i])
 
         if not difference:
             # they're equal
-            return bin
+            return i
         elif difference < smallest_difference:
             # find the whichever bin it's closest to
             smallest_difference = difference
-            best_match = bin
+            best_match_i = i
         elif difference > smallest_difference:
             # we passed our bin
-            return best_match
+            return best_match_i
 
     # this should never execute but just for sanity's sake
-    return best_match
+    return best_match_i
 
 
 def dump_tracks(midi_file):
