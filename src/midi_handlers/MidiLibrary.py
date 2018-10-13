@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-import music21
+from midi_handlers.MidiToArrayBuilder import MidiToArrayBuilder
 
 from files.file_functions import get_filenames
 import wwts_globals
@@ -39,102 +39,6 @@ class MidiLibrary(ABC):
         pass
 
 
-    @abstractmethod
-    def step_through(self):
-        pass
-
-
-    @staticmethod
-    def load_files(filenames):
-
-        buf = []
-        done = 0
-
-        for filename in filenames:
-
-            wwts_globals.progress_bar(done, filenames.size, "Buffering " + filename + "...", clear_when_done=True)
-            done += 1
-
-            try:
-                mid = music21.converter.parse(filename, quantizePost=False)
-            except Exception as e:
-                print("\nThere was an error reading", filename)
-                print(e)
-                continue
-
-            buf.extend(MidiLibrary.mid_to_array(mid))
-
-        wwts_globals.progress_bar(done, filenames.size, "Buffering complete!", clear_when_done=True)
-
-        return np.array(buf)
-
-
-    @staticmethod
-    def mid_to_array(mid):
-
-        # TODO: Code for handling too large durations
-
-        # empty space before each file
-        buf = [np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)]
-
-        for track in mid.parts:
-
-            # need this to track start/end of track
-            found_a_note = False
-
-            for msg in track.notesAndRests:
-
-                # it will never get here if it never finds a note
-                if not found_a_note:
-                    found_a_note = True
-                    # slide a start_track in there
-                    buf.append(MidiLibrary.special_step(-2))
-
-                # find the one-hot note
-                if msg.isNote:
-                    buf.append(MidiLibrary.build_step(msg.pitch.midi, msg.quarterLength))
-                elif msg.isRest:
-                    buf.append(MidiLibrary.build_step(128, msg.quarterLength))
-                elif msg.isChord:
-                    buf.append(MidiLibrary.special_step(-4))
-                    for note in msg._notes:
-                        buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength))
-                    buf.append(MidiLibrary.special_step(-3))
-                else:
-                    raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
-
-            if found_a_note:
-                # slide a start_end in there
-                buf.append(MidiLibrary.special_step(-1))
-
-        if len(buf) == 63:
-            # raise Exception("No notes found in the MIDI file!")
-            return []
-
-        return buf
-
-
-    @staticmethod
-    def special_step(i):
-
-        this_step = np.zeros(NUM_FEATURES)
-        this_step[i] = 1
-        return this_step
-
-    @staticmethod
-    def build_step(note_i, duration):
-
-        # find the one-hot note duration
-        duration_i = wwts_globals.get_note_duration_bin(duration)
-
-        # buffer for the current step we are on
-        this_step = np.zeros(NUM_FEATURES)
-        this_step[note_i] = 1
-        this_step[129 + duration_i] = 1
-
-        return this_step
-
-
 
 class MidiLibraryFlat(MidiLibrary):
 
@@ -145,7 +49,35 @@ class MidiLibraryFlat(MidiLibrary):
 
 
     def load(self):
-        self.buf = self.load_files(self.filenames)
+        self.load_files()
+
+
+    def load_files(self):
+
+        temp_buf = []
+        done = 0
+
+        for filename in self.filenames:
+
+            # update the progress bar to show it's working on the current file
+            wwts_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...", clear_when_done=True)
+
+            try:
+                file_buf = MidiToArrayBuilder(filename).mid_to_array()
+            except Exception as e:
+                print("\nThere was an error buffering", filename)
+                print(e)
+                continue
+
+            # slap this file's buffer onto the back of our running buffer
+            temp_buf.extend(file_buf)
+            # for progress tracking
+            done += 1
+
+        # finish off the progress bar
+        wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
+
+        self.buf = np.array(temp_buf)
 
 
     def step_through(self):
