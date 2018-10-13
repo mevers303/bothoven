@@ -56,7 +56,7 @@ class MidiLibrary(ABC):
             done += 1
 
             try:
-                mid = music21.converter.parse(filename)
+                mid = music21.converter.parse(filename, quantizePost=False)
             except Exception as e:
                 print("\nThere was an error reading", filename)
                 print(e)
@@ -96,9 +96,14 @@ class MidiLibrary(ABC):
                 elif msg.isRest:
                     buf.append(MidiLibrary.build_step(128, msg.quarterLength))
                 elif msg.isChord:
+                    this_step = np.zeros(NUM_FEATURES)
+                    this_step[-4] = 1
+                    buf.append(this_step)
                     for note in msg._notes:
                         buf.append(MidiLibrary.build_step(note.pitch.midi, note.quarterLength, chord=True))
-                    pass
+                    this_step = np.zeros(NUM_FEATURES)
+                    this_step[-3] = 1
+                    buf.append(this_step)
                 else:
                     raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
 
