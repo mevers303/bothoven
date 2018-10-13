@@ -8,9 +8,6 @@ import numpy as np
 import os
 import pickle
 
-# import sys
-# sys.path.append("src")
-
 from midi_handlers.MidiLibrary import MidiLibraryFlat
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
@@ -24,48 +21,21 @@ np.random.seed(777)
 
 def create_model(name):
 
-    # # CREATE THE _model
-    # _model = keras.models.Sequential()
-    # _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
-    # _model.add(keras.layers.Dropout(.555))
-    # _model.add(keras.layers.LSTM(units=444, return_sequences=True))
-    # _model.add(keras.layers.Dropout(.333))
-    # _model.add(keras.layers.LSTM(222))
-    # _model.add(keras.layers.Dropout(.111))
-    # _model.add(keras.layers.Dense(units=NUM_FEATURES))
-    # _model.compile(loss='mae', optimizer='adam')
-    # print(_model.summary())
-
     # CREATE THE _model
-    inputs = keras.layers.Input(shape=(NUM_STEPS, NUM_FEATURES))
-
-
-    note_branch = keras.layers.LSTM(units=666, return_sequences=True)(inputs)
-    note_branch = keras.layers.Dropout(.555)(note_branch)
-    note_branch = keras.layers.LSTM(units=444, return_sequences=True)(note_branch)
-    note_branch = keras.layers.Dropout(.333)(note_branch)
-    note_branch = keras.layers.LSTM(units=222)(note_branch)
-    note_branch = keras.layers.Dropout(.111)(note_branch)
-    note_branch = keras.layers.Dense(units=(NUM_FEATURES - 1), activation="softmax", name="note_branch")(note_branch)
-
-
-    time_branch = keras.layers.LSTM(units=666, return_sequences=True)(inputs)
-    time_branch = keras.layers.Dropout(.555)(time_branch)
-    time_branch = keras.layers.LSTM(units=444, return_sequences=True)(time_branch)
-    time_branch = keras.layers.Dropout(.333)(time_branch)
-    time_branch = keras.layers.LSTM(units=222)(time_branch)
-    time_branch = keras.layers.Dropout(.111)(time_branch)
-    time_branch = keras.layers.Dense(units=1, activation="relu", name="time_branch")(time_branch)
-
-    _model = keras.models.Model(inputs=inputs, outputs=[note_branch, time_branch], name=name)
-    _model.compile(loss={"note_branch": "categorical_crossentropy", "time_branch": "mse"}, loss_weights={"note_branch": 1, "time_branch":10e-9}, optimizer="adam")
-
+    _model = keras.models.Sequential()
+    _model.add(keras.layers.LSTM(units=666, input_shape=(NUM_STEPS, NUM_FEATURES), return_sequences=True))
+    _model.add(keras.layers.Dropout(.555))
+    _model.add(keras.layers.LSTM(units=444, return_sequences=True))
+    _model.add(keras.layers.Dropout(.333))
+    _model.add(keras.layers.LSTM(222))
+    _model.add(keras.layers.Dropout(.111))
+    _model.add(keras.layers.Dense(units=NUM_FEATURES, activation='sigmoid'))
+    _model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     print(_model.summary())
 
     save_model_structure(_model)
 
     return _model
-
 
 
 def load_model_structure(name):
@@ -91,9 +61,8 @@ def save_model_structure(_model):
 
     print("Saving model to disk...")
     # serialize _model to JSON
-    _model_json = _model.to_json()
     with open(filename, "w") as json_file:
-        json_file.write(_model_json)
+        json_file.write(_model.to_json())
 
 
 def fit_model(_model, _dataset):
