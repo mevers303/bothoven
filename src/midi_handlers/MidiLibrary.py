@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-from midi_handlers.MidiToArrayBuilder import MidiToArrayBuilder
+from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 
 from files.file_functions import get_filenames
 import wwts_globals
@@ -65,7 +65,7 @@ class MidiLibraryFlat(MidiLibrary):
             done += 1
 
             try:
-                file_buf = MidiToArrayBuilder(filename).mid_to_array()
+                file_buf = Music21ArrayBuilder(filename).mid_to_array()
             except Exception as e:
                 print("\nThere was an error buffering", filename)
                 print(e)

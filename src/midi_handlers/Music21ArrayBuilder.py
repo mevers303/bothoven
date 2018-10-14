@@ -6,7 +6,7 @@ from wwts_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin, MAXIMUM
 
 
 
-class MidiToArrayBuilder:
+class Music21ArrayBuilder:
 
     def __init__(self, filename):
 
