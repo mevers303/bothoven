@@ -41,7 +41,8 @@ class Music21ArrayBuilder:
                 # slide a start_end in there
                 self.special_step(-1)
 
-        return np.array(self.buf)
+        buf_array = np.array(self.buf)
+        buf_array[:, -5] = buf_array[:, -5] / buf_array[:, -5].max()
 
 
     def parse_msg(self, msg):
