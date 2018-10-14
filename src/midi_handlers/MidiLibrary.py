@@ -31,7 +31,7 @@ class MidiLibrary(ABC):
     def find_files(self):
 
         self.filenames = np.array(get_filenames(self.base_dir))
-        print("Found", self.filenames.size, "in", self.base_dir)
+        print("Found", self.filenames.size, "files in", self.base_dir)
 
 
     @abstractmethod
@@ -61,6 +61,8 @@ class MidiLibraryFlat(MidiLibrary):
 
             # update the progress bar to show it's working on the current file
             wwts_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...", clear_when_done=True)
+            # for progress tracking
+            done += 1
 
             try:
                 file_buf = MidiToArrayBuilder(filename).mid_to_array()
@@ -71,8 +73,6 @@ class MidiLibraryFlat(MidiLibrary):
 
             # slap this file's buffer onto the back of our running buffer
             temp_buf.extend(file_buf)
-            # for progress tracking
-            done += 1
 
         # finish off the progress bar
         wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
