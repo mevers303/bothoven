@@ -1,7 +1,7 @@
 from collections import defaultdict
 import numpy as np
 import mido
-from scipy import sparse
+import scipy.sparse
 
 from wwts_globals import NUM_FEATURES, NUM_STEPS
 
@@ -51,7 +51,7 @@ class MidiArrayBuilder:
             return []
 
         # empty buffer of NUM_STEPS for the beginning of the track
-        buf = [sparse.csr_matrix((NUM_STEPS - 1, NUM_FEATURES), dtype=np.byte)]
+        buf = [scipy.sparse.csr_matrix((NUM_STEPS - 1, NUM_FEATURES), dtype=np.byte)]
 
         for track in self.tracks:
 
@@ -64,9 +64,9 @@ class MidiArrayBuilder:
                 y.extend(note_codes)
                 data.extend([1] * len(note_codes))
 
-            track_buf = sparse.csr_matrix((data, (x, y)), shape=(max(track) + 1 + 2, NUM_FEATURES),
+            track_buf = scipy.sparse.csr_matrix((data, (x, y)), shape=(max(track) + 1 + 2, NUM_FEATURES),
                                           dtype=np.byte)  # +1 because the abs_time is an index and +2 for track_start and track_end
 
             buf.append(track_buf)
 
-        return sparse.vstack(buf, format="csr", dtype=np.byte)
+        return scipy.sparse.vstack(buf, format="csr", dtype=np.byte)
