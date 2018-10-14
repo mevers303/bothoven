@@ -163,7 +163,7 @@ def main():
     import os
     import pickle
 
-    lib_name = "metallica"
+    lib_name = "metallica_m21"
 
     lib = MidiLibraryFlat(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default
@@ -173,25 +173,6 @@ def main():
         pickle.dump(lib, f)
     print("Done!")
 
-
-def test():
-
-    import os
-    import pickle
-
-    lib_name = "metallica"
-
-    print("Loading pickle...")
-    with open(os.path.join(f"midi/pickles/{lib_name}.pkl"), "rb") as f:
-        lib = pickle.load(f)
-    print("Done!")
-
-    for x, y in lib.step_through():
-        print("x:")
-        print(x)
-        print("y:")
-        print(y)
-        print("\n")
 
 
 if __name__ == "__main__":
