@@ -78,7 +78,7 @@ class MidiLibraryFlat(MidiLibrary):
         wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
 
         self.buf = np.array(temp_buf)
-        self.buf = self.buf / self.buf.max(axis=0)
+        self.buf[:, -5] = self.buf[:, -5] / self.buf[:, -5].max()
 
 
     def step_through(self):
