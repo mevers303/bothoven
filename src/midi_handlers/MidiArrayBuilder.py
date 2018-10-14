@@ -1,9 +1,8 @@
-import copy
+from collections import defaultdict
 import numpy as np
-import music21
+import mido
 
-from wwts_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin, MAXIMUM_NOTE_LENGTH
-
+from wwts_globals import NUM_FEATURES, NUM_STEPS
 
 
 class MidiArrayBuilder:
@@ -11,102 +10,63 @@ class MidiArrayBuilder:
     def __init__(self, filename):
 
         self.filename = filename
-        self.buf = []
+        self.tracks = []
 
 
     def mid_to_array(self):
 
-        mid = music21.converter.parse(self.filename, quantizePost=False)
+        mid = mido.MidiFile(self.filename)
 
-        for part in mid.parts:
+        for track in mid.tracks:
 
-            # need this to track start/end of track
-            found_a_note = False
+            # running total of the amount of time that has passed
+            abs_time = 0
+            track_dict = defaultdict(list)
 
-            for msg in part.notesAndRests:
+            for msg in track:
 
-                # it will never get here if it never finds a note
-                if not found_a_note:
-                    found_a_note = True
-                    self.buf.extend([np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)])  # the empty buf at the beginning
-                    self.special_step(-2)  # start_track one-hot
+                abs_time += msg.time
 
-                # truncate long messages and pad the end with one or more rests
-                if msg.quarterLength > MAXIMUM_NOTE_LENGTH:
-                    self.parse_too_long_msg(msg, part)
-                else:
-                    self.parse_msg(msg)
+                if not (msg.type == 'note_on' or msg.type == 'note_off') or msg.channel == 9:  # skip drum tracks
+                    continue
 
-            if found_a_note:
-                # slide a start_end in there
-                self.special_step(-1)
+                # find the one-hot note
+                note_code = msg.note
+                if msg.type == "note_off" or not msg.velocity:
+                    note_code += 128
 
-        return self.buf
+                # add this note to our dictionary of absolute times
+                track_dict[abs_time].append(note_code)
 
+            if len(track_dict):
+                self.tracks.append(track_dict)
 
-    def parse_msg(self, msg):
-
-        # find the one-hot note
-        if msg.isNote:
-            self.note_step(msg.pitch.midi, msg.quarterLength, msg.beat)
-        elif msg.isRest:
-            self.note_step(128, msg.quarterLength, msg.beat)
-        elif msg.isChord:
-            self.special_step(-4)  # chord_start one-hot
-            for note in msg._notes:
-                self.note_step(note.pitch.midi, note.quarterLength, msg.beat)
-            self.special_step(-3)  # chord_end one-hot
-        else:
-            raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
+        return self.flush_out_buf()
 
 
-    def parse_too_long_msg(self, msg, part):
+    def flush_out_buf(self):
 
-        # sanity check
-        if msg.quarterLength <= MAXIMUM_NOTE_LENGTH:
-            return msg
+        if not len(self.tracks):
+            return []
 
-        # create a copy of the note and change the duration, then parse that instead
-        new_msg = copy.deepcopy(msg)
-        new_msg.quarterLength = MAXIMUM_NOTE_LENGTH
-        self.parse_msg(new_msg)
+        # empty buffer of NUM_STEPS for the beginning of the track
+        buf = [np.zeros((NUM_STEPS - 1, NUM_FEATURES))]
 
-        remaining_length = msg.quarterLength - MAXIMUM_NOTE_LENGTH
-        last_beat = msg.beat
-        offset = msg.offset + MAXIMUM_NOTE_LENGTH
+        for track in self.tracks:
 
-        while remaining_length > 0:
-            # get the current time signature
-            beatcount = 4
-            for ts in part.getTimeSignatures():
-                if ts.offset > offset:
-                    break
-                beatcount = ts.beatCount
+            track_buf = np.zeros((max(track) + 1 + 2, NUM_FEATURES))  # +1 because the abs_time is an index and +2 for track_start and track_end
+            track_buf[0, -2] = 1  # track_start
 
-            this_length = min(remaining_length, MAXIMUM_NOTE_LENGTH)
-            this_beat = last_beat + MAXIMUM_NOTE_LENGTH
-            while this_beat > beatcount:
-                this_beat -= beatcount
+            # index pair locations for numpy
+            x = []
+            y = []
+            for abs_time, note_codes in track.items():
+                x.extend([abs_time + 1] * len(note_codes))  # abs_time + 1 to skip over track_start
+                y.extend(note_codes)
 
-            self.note_step(128, this_length, this_beat)
-            remaining_length -= this_length
-            last_beat = this_beat
-            offset += this_length
+            track_buf[x, y] = 1  # set all those one-hots to 1
+            track_buf[-1, -1] = 1  # track_end
 
+            buf.append(track_buf)
 
-    def special_step(self, i):
-
-        this_step = np.zeros(NUM_FEATURES)
-        this_step[i] = 1
-        self.buf.append(this_step)
-
-
-    def note_step(self, note_i, duration, beat):
-
-        this_step = np.zeros(NUM_FEATURES)
-
-        this_step[note_i] = 1  # the midi note one-hot
-        this_step[129 + get_note_duration_bin(duration)] = 1  # the duration one-hot
-        this_step[-5] = beat  #
-
-        self.buf.append(this_step)
+        return np.concatenate(buf, axis=0)
