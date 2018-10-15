@@ -39,7 +39,7 @@ def main():
         try:
             mid = toolbox.process_midi_file(mido.MidiFile(filename))
         except KeyboardInterrupt:
-            exit(9)
+            exit(1)
         except Exception as e:
             print("\nThere was an error reading", filename)
             print(e)
@@ -49,7 +49,7 @@ def main():
         try:
             mid.save(outfile)
         except KeyboardInterrupt:
-            exit(9)
+            exit(1)
         except Exception as e:
             print("\nThere was an error saving", outfile)
             print(e)

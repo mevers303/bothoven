@@ -23,7 +23,7 @@ class Music21ArrayBuilder:
             # need this to track start/end of track
             found_a_note = False
 
-            for msg in part.notesAndRests:
+            for msg in part.flat.notesAndRests:
 
                 # it will never get here if it never finds a note
                 if not found_a_note:
@@ -41,8 +41,7 @@ class Music21ArrayBuilder:
                 # slide a start_end in there
                 self.special_step(-1)
 
-        buf_array = np.array(self.buf)
-        buf_array[:, -5] = buf_array[:, -5] / buf_array[:, -5].max()
+        return self.buf
 
 
     def parse_msg(self, msg):
