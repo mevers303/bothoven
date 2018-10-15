@@ -73,7 +73,7 @@ def fit_model(_model, _dataset):
     model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:02d}-{loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
-    history = _model.fit_generator(_dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks)
+    history = _model.fit_generator(_dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, initial_epoch=4)
 
     with open(logfile, "a") as f:
         f.write(str(history))
@@ -88,14 +88,16 @@ def fit_model(_model, _dataset):
 
 def main():
 
-    lib_name = "metallica"
+    lib_name = "metallica_m21"
     model_name = "metallica_666555444333222111"
 
     if not os.path.exists(f"models/{model_name}"):
         os.mkdir(f"models/{model_name}")
 
-    print("Creating model...")
-    model = create_model(model_name)
+    # print("Creating model...")
+    # model = create_model(model_name)
+
+    model = keras.models.load_model("models/metallica_666555444333222111/epoch_04-0.04.hdf5")
 
     print("Loading dataset...")
     # dataset = MidiLibrarySplit(lib_path)
