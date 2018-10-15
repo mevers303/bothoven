@@ -52,3 +52,5 @@ for filename in filenames:
             print("There was an error saving", os.path.join(out_dir, os.path.basename(filename)))
             print(e)
             continue
+
+progress_bar(done, total, "Done!")
