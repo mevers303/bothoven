@@ -2,7 +2,7 @@ import keras
 import numpy as np
 import pickle
 
-from midi_handlers.MidiLibrary import MidiLibraryFlat
+from midi_handlers.MusicLibrary import MusicLibraryFlat
 
 
 lib_name = "metallica_m21"

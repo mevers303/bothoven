@@ -8,10 +8,10 @@ from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 
 import wwts_globals
 from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
-from midi_handlers.MidiLibrary import MidiLibraryFlat
+from midi_handlers.MusicLibrary import MusicLibraryFlat
 
 
-class Music21LibraryFlat(MidiLibraryFlat):
+class Music21LibraryFlat(MusicLibraryFlat):
 
     def __init__(self, base_dir="", filenames=None, autoload=True):
 

@@ -8,7 +8,7 @@ import numpy as np
 import os
 import pickle
 
-from midi_handlers.MidiLibrary import MidiLibraryFlat
+from midi_handlers.MusicLibrary import MusicLibraryFlat
 from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 

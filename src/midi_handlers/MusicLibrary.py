@@ -12,7 +12,7 @@ from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
 
-class MidiLibrary(ABC):
+class MusicLibrary(ABC):
 
     def __init__(self, array_builder_type, base_dir="", filenames=None, autoload=True):
 
@@ -40,12 +40,12 @@ class MidiLibrary(ABC):
 
 
 
-class MidiLibraryFlat(MidiLibrary, ABC):
+class MusicLibraryFlat(MusicLibrary, ABC):
 
     def __init__(self, array_builder_type, base_dir="", filenames=None, autoload=True):
 
         self.buf = None
-        MidiLibrary.__init__(self, array_builder_type, base_dir, filenames, autoload)
+        MusicLibrary.__init__(self, array_builder_type, base_dir, filenames, autoload)
 
 
     def load(self):
@@ -112,7 +112,7 @@ class MidiLibraryFlat(MidiLibrary, ABC):
 
 
 
-class MidiLibrarySplit(MidiLibrary):
+class MusicLibrarySplit(MusicLibrary):
 
     def __init__(self, array_builder_type, flat_library_type, base_dir="", filenames=None, autoload=True):
 
@@ -155,7 +155,7 @@ def main():
 
     lib_name = "metallica_m21"
 
-    lib = MidiLibraryFlat(os.path.join("midi", lib_name))
+    lib = MusicLibraryFlat(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default
 
     print("Pickling...")
