@@ -31,7 +31,7 @@ class MidiLibraryFlat(MusicLibraryFlat):
         while i < self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
 
             x = self.buf[i:i + NUM_STEPS].toarray()
-            y = self.buf[i + NUM_STEPS].toarray()
+            y = self.buf[i + NUM_STEPS].toarray()[0]
 
             i += 1
 
@@ -50,7 +50,7 @@ def main():
 
     print("Pickling...")
     os.makedirs("midi/pickles")
-    with open(os.path.join(f"midi/pickles/{lib_name}.pkl"), "wb") as f:
+    with open(os.path.join(f"midi/pickles/{lib_name}_midi.pkl"), "wb") as f:
         pickle.dump(lib, f)
     print("Done!")
 

@@ -8,7 +8,7 @@ import numpy as np
 import os
 import pickle
 
-from midi_handlers.MusicLibrary import MusicLibraryFlat
+from midi_handlers.MidiLibrary import MidiLibraryFlat
 from bothoven_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 
@@ -73,7 +73,7 @@ def fit_model(_model, _dataset):
     model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:02d}-{loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
-    history = _model.fit_generator(_dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, initial_epoch=4)
+    history = _model.fit_generator(_dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks)
 
     with open(logfile, "a") as f:
         f.write(str(history))
@@ -88,16 +88,15 @@ def fit_model(_model, _dataset):
 
 def main():
 
-    lib_name = "metallica_m21"
-    model_name = "metallica_666555444333222111"
+    lib_name = "bach"
+    model_name = "bach_666555444333222111"
 
     if not os.path.exists(f"models/{model_name}"):
         os.mkdir(f"models/{model_name}")
 
-    # print("Creating model...")
-    # model = create_model(model_name)
-
-    model = keras.models.load_model("models/metallica_666555444333222111/epoch_04-0.04.hdf5")
+    print("Creating model...")
+    model = create_model(model_name)
+    # model = keras.models.load_model("models/metallica_666555444333222111/epoch_04-0.04.hdf5")
 
     print("Loading dataset...")
     # dataset = MidiLibrarySplit(lib_path)
