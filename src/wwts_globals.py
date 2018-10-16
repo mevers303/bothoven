@@ -148,19 +148,6 @@ def midi_to_string(midi_note):
     return note[0] + str(note[1])
 
 
-def to_reltime(messages):
-    """
-        Convert messages to relative time.
-    """
-
-    now = 0
-
-    for msg in messages:
-        delta = msg.time - now
-        yield msg.copy(time=delta)
-        now = msg.time
-
-
 _progress_bar_last_time = 0
 def progress_bar(done, total, text="", clear_when_done=False, resolution=0.333):
     """

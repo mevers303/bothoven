@@ -5,7 +5,6 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 
 from files.file_functions import get_filenames
 import wwts_globals
@@ -113,10 +112,9 @@ class MidiLibraryFlat(MidiLibrary, ABC):
 
 
 
-
 class MidiLibrarySplit(MidiLibrary):
 
-    def __init__(self, base_dir, flat_library_type):
+    def __init__(self, array_builder_type, flat_library_type, base_dir="", filenames=None, autoload=True):
 
         self.filenames_train = None
         self.filenames_test = None
@@ -124,7 +122,7 @@ class MidiLibrarySplit(MidiLibrary):
         self.test_lib = None
         self.flat_library_type = flat_library_type
 
-        super().__init__(base_dir)
+        super().__init__(self, array_builder_type, base_dir, filenames, autoload)
 
 
     def split_files(self):
@@ -142,7 +140,6 @@ class MidiLibrarySplit(MidiLibrary):
 
 
     def load(self):
-
         self.split_files()
 
     def step_through(self):
