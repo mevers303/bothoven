@@ -23,6 +23,8 @@ class Music21LibraryFlat(MusicLibraryFlat):
 
         super().load_files()
 
+        self.buf = np.array(self.buf)
+
         self.beat_norm_max = self.buf[:, -5].max()
         self.buf[:, -5] = self.buf[:, -5] / self.beat_norm_max
 

@@ -54,7 +54,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
 
     def load_files(self):
 
-        temp_buf = []
+        self.buf = []
         done = 0
 
         for filename in self.filenames:
@@ -72,12 +72,10 @@ class MusicLibraryFlat(MusicLibrary, ABC):
                 continue
 
             # slap this file's buffer onto the back of our running buffer
-            temp_buf.extend(file_buf)
+            self.buf.extend(file_buf)
 
         # finish off the progress bar
         wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
-
-        self.buf = np.array(temp_buf)
 
 
     @abstractmethod
