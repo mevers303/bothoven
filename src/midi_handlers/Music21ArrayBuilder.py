@@ -16,7 +16,7 @@ class Music21ArrayBuilder:
 
     def mid_to_array(self):
 
-        mid = music21.converter.parse(self.filename, quantizePost=False)
+        mid = music21.converter.parse(self.filename)
 
         for part in mid.parts:
 

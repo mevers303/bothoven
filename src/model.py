@@ -9,6 +9,7 @@ import os
 import pickle
 
 from midi_handlers.MidiLibrary import MidiLibraryFlat
+from midi_handlers.Music21Library import Music21LibraryFlat
 from bothoven_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 
@@ -88,11 +89,11 @@ def fit_model(_model, _dataset):
 
 def main():
 
-    lib_name = "bach"
-    model_name = "bach_666555444333222111"
+    lib_name = "metallica_m21"
+    model_name = "metallica_666555444333222111"
 
     if not os.path.exists(f"models/{model_name}"):
-        os.mkdir(f"models/{model_name}")
+        os.makedirs(f"models/{model_name}")
 
     print("Creating model...")
     model = create_model(model_name)

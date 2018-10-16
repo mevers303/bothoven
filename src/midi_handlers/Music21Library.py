@@ -48,9 +48,10 @@ def main():
     import os
     import pickle
 
-    lib_name = "bach"
+    lib_name = "metallica"
 
     lib = Music21LibraryFlat(os.path.join("midi", lib_name))
+    # lib = Music21LibraryFlat(filenames=np.array([str(x) for x in music21.corpus.getComposer("bach")]))
     # lib.load()  # autoload is on by default
 
     print("Pickling...")
