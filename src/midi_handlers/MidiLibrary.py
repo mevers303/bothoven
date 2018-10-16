@@ -3,54 +3,19 @@
 # MidiLibrary.py
 # Objects for managing a set of MIDI files.
 
-from abc import ABC, abstractmethod
 import numpy as np
 from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
 import scipy.sparse
 
-from files.file_functions import get_filenames
+from midi_handlers.MusicLibrary import MusicLibraryFlat
 import wwts_globals
 from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
-
-class MidiLibrary(ABC):
-
-    def __init__(self, base_dir="", filenames=None, autoload=True):
-
-        self.base_dir = base_dir
-        self.filenames = filenames
-        self.midi = None
-
-        if self.filenames is None:
-            self.find_files()
-
-        if autoload:
-            self.load()
-
-
-    def find_files(self):
-
-        self.filenames = np.array(get_filenames(self.base_dir))
-        print("Found", self.filenames.size, "files in", self.base_dir)
-
-
-    @abstractmethod
-    def load(self):
-        pass
-
-
-
-class MidiLibraryFlat(MidiLibrary):
+class MidiLibraryFlat(MusicLibraryFlat):
 
     def __init__(self, base_dir="", filenames=None, autoload=True):
-
-        self.buf = None
-        super().__init__(base_dir, filenames, autoload)
-
-
-    def load(self):
-        self.load_files()
+        super().__init__(MidiArrayBuilder, base_dir, filenames, autoload)
 
 
     def load_files(self):
