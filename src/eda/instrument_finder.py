@@ -2,7 +2,7 @@ import mido
 import os
 
 from wwts_globals import progress_bar
-from files.file_functions import get_filenames
+from functions.file_functions import get_filenames
 
 
 in_dir = "/home/mark/Documents/raw_midi"

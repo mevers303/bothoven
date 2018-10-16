@@ -1,12 +1,12 @@
 # Mark Evers
 # 9/21/18
 # MidiLibrary.py
-# Objects for managing a set of MIDI files.
+# Objects for managing a set of MIDI functions.
 
 from abc import ABC, abstractmethod
 import numpy as np
 
-from files.file_functions import get_filenames
+from functions.file_functions import get_filenames
 import wwts_globals
 from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
@@ -31,7 +31,7 @@ class MusicLibrary(ABC):
     def find_files(self):
 
         self.filenames = np.array(get_filenames(self.base_dir))
-        print("Found", self.filenames.size, "files in", self.base_dir + "...")
+        print("Found", self.filenames.size, "functions in", self.base_dir + "...")
 
 
     @abstractmethod

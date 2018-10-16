@@ -1,7 +1,7 @@
 # Mark Evers
 # 9/21/18
 # MidiLibrary.py
-# Objects for managing a set of MIDI files.
+# Objects for managing a set of MIDI functions.
 
 import numpy as np
 from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
