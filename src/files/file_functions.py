@@ -17,7 +17,5 @@ def get_filenames(base_dir):
 
             filenames.append(full_path)
 
-    print("Found", len(filenames), "files in", base_dir + "...")
-
     return filenames
 
