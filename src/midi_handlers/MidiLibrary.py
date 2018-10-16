@@ -43,12 +43,13 @@ def main():
     import os
     import pickle
 
-    lib_name = "metallica"
+    lib_name = "bach"
 
     lib = MidiLibraryFlat(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default
 
     print("Pickling...")
+    os.makedirs("midi/pickles")
     with open(os.path.join(f"midi/pickles/{lib_name}.pkl"), "wb") as f:
         pickle.dump(lib, f)
     print("Done!")

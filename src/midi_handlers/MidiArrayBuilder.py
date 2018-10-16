@@ -64,8 +64,7 @@ class MidiArrayBuilder:
                 y.extend(note_codes)
                 data.extend([1] * len(note_codes))
 
-            track_buf = scipy.sparse.csr_matrix((data, (x, y)), shape=(max(track) + 1 + 2, NUM_FEATURES),
-                                          dtype=np.byte)  # +1 because the abs_time is an index and +2 for track_start and track_end
+            track_buf = scipy.sparse.csr_matrix((data, (x, y)), shape=(max(track) + 1 + 2, NUM_FEATURES), dtype=np.byte)  # +1 because the abs_time is an index and +2 for track_start and track_end
 
             buf.append(track_buf)
 

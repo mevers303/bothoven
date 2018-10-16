@@ -72,7 +72,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
                 continue
 
             # slap this file's buffer onto the back of our running buffer
-            self.buf.extend(file_buf)
+            self.buf.append(file_buf)
 
         # finish off the progress bar
         bothoven_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
