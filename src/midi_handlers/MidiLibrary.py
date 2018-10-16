@@ -15,8 +15,9 @@ from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 class MidiLibrary(ABC):
 
-    def __init__(self, base_dir="", filenames=None, autoload=True):
+    def __init__(self, array_builder_type, base_dir="", filenames=None, autoload=True):
 
+        self.array_builder_type = array_builder_type
         self.base_dir = base_dir
         self.filenames = filenames
         self.midi = None
@@ -31,7 +32,7 @@ class MidiLibrary(ABC):
     def find_files(self):
 
         self.filenames = np.array(get_filenames(self.base_dir))
-        print("Found", self.filenames.size, "files in", self.base_dir)
+        print("Found", self.filenames.size, "files in", self.base_dir + "...")
 
 
     @abstractmethod
@@ -40,13 +41,12 @@ class MidiLibrary(ABC):
 
 
 
-class MidiLibraryFlat(MidiLibrary):
+class MidiLibraryFlat(MidiLibrary, ABC):
 
-    def __init__(self, base_dir="", filenames=None, autoload=True):
+    def __init__(self, array_builder_type, base_dir="", filenames=None, autoload=True):
 
         self.buf = None
-        super().__init__(base_dir, filenames, autoload)
-        self.beat_norm_max = 0
+        MidiLibrary.__init__(self, array_builder_type, base_dir, filenames, autoload)
 
 
     def load(self):
@@ -66,7 +66,7 @@ class MidiLibraryFlat(MidiLibrary):
             done += 1
 
             try:
-                file_buf = Music21ArrayBuilder(filename).mid_to_array()
+                file_buf = self.array_builder_type(filename).mid_to_array()
             except Exception as e:
                 print("\nThere was an error buffering", filename)
                 print(e)
@@ -80,22 +80,10 @@ class MidiLibraryFlat(MidiLibrary):
 
         self.buf = np.array(temp_buf)
 
-        self.beat_norm_max = self.buf[:, -5].max()
-        self.buf[:, -5] = self.buf[:, -5] / self.beat_norm_max
 
-
+    @abstractmethod
     def step_through(self):
-
-        i = 0
-
-        while i < self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
-
-            x = self.buf[i:i + NUM_STEPS]
-            y = self.buf[i + NUM_STEPS]
-
-            i += 1
-
-            yield x, y
+        pass
 
 
     def next_batch(self):
@@ -128,12 +116,13 @@ class MidiLibraryFlat(MidiLibrary):
 
 class MidiLibrarySplit(MidiLibrary):
 
-    def __init__(self, base_dir):
+    def __init__(self, base_dir, flat_library_type):
 
         self.filenames_train = None
         self.filenames_test = None
         self.train_lib = None
         self.test_lib = None
+        self.flat_library_type = flat_library_type
 
         super().__init__(base_dir)
 
@@ -147,9 +136,9 @@ class MidiLibrarySplit(MidiLibrary):
         self.filenames_train = self.filenames[train_indices]
         self.filenames_test = self.filenames[test_indices]
         print("Buffering training set...")
-        self.train_lib = MidiLibraryFlat(filenames=self.filenames_train)
+        self.train_lib = self.flat_library_type(filenames=self.filenames_train)
         print("Buffering test set...")
-        self.test_lib = MidiLibraryFlat(filenames=self.filenames_test)
+        self.test_lib = self.flat_library_type(filenames=self.filenames_test)
 
 
     def load(self):
