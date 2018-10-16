@@ -8,7 +8,6 @@ from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
 import scipy.sparse
 
 from midi_handlers.MusicLibrary import MusicLibraryFlat
-import wwts_globals
 from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
@@ -20,30 +19,9 @@ class MidiLibraryFlat(MusicLibraryFlat):
 
     def load_files(self):
 
-        temp_buf = []
-        done = 0
+        super().load_files()
 
-        for filename in self.filenames:
-
-            # update the progress bar to show it's working on the current file
-            wwts_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...", clear_when_done=True)
-            # for progress tracking
-            done += 1
-
-            try:
-                file_buf = MidiArrayBuilder(filename).mid_to_array()
-            except Exception as e:
-                print("\nThere was an error buffering", filename)
-                print(e)
-                continue
-
-            # slap this file's buffer onto the back of our running buffer
-            temp_buf.append(file_buf)
-
-        # finish off the progress bar
-        wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
-
-        self.buf = scipy.sparse.vstack(temp_buf, format="csr", dtype=np.byte)
+        self.buf = scipy.sparse.vstack(self.buf, format="csr", dtype=np.byte)
 
 
     def step_through(self):
@@ -58,70 +36,6 @@ class MidiLibraryFlat(MusicLibraryFlat):
             i += 1
 
             yield x, y
-
-
-    def next_batch(self):
-
-        i = 0
-        batch_x = []
-        batch_y = []
-
-        while True:
-
-            for x, y in self.step_through():
-
-                if i >= BATCH_SIZE:
-                    yield np.array(batch_x), np.array(batch_y)
-                    batch_x.clear()
-                    batch_y.clear()
-                    i = 0
-
-                batch_x.append(x)
-                batch_y.append(y)
-                i += 1
-
-            yield np.array(batch_x), np.array(batch_y)
-            batch_x.clear()
-            batch_y.clear()
-            i = 0
-
-
-
-
-class MidiLibrarySplit(MidiLibrary):
-
-    def __init__(self, base_dir):
-
-        self.filenames_train = None
-        self.filenames_test = None
-        self.train_lib = None
-        self.test_lib = None
-
-        super().__init__(base_dir)
-
-
-    def split_files(self):
-
-        test_size = int(self.filenames.size / 4)
-        test_indices = np.random.choice(self.filenames.size, size=test_size, replace=False)
-        train_indices = np.delete(np.arange(self.filenames.size), test_indices)
-
-        self.filenames_train = self.filenames[train_indices]
-        self.filenames_test = self.filenames[test_indices]
-        print("Buffering training set...")
-        self.train_lib = MidiLibraryFlat(filenames=self.filenames_train)
-        print("Buffering test set...")
-        self.test_lib = MidiLibraryFlat(filenames=self.filenames_test)
-
-
-    def load(self):
-
-        self.split_files()
-
-    def step_through(self):
-        pass
-
-
 
 
 def main():
