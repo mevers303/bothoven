@@ -8,7 +8,7 @@ from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
 import scipy.sparse
 
 from midi_handlers.MusicLibrary import MusicLibraryFlat
-from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
+from bothoven_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
 class MidiLibraryFlat(MusicLibraryFlat):

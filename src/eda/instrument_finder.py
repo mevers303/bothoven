@@ -1,7 +1,7 @@
 import mido
 import os
 
-from wwts_globals import progress_bar
+from bothoven_globals import progress_bar
 from functions.file_functions import get_filenames
 
 

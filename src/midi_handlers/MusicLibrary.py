@@ -7,8 +7,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from functions.file_functions import get_filenames
-import wwts_globals
-from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
+import bothoven_globals
+from bothoven_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
 
@@ -60,7 +60,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
         for filename in self.filenames:
 
             # update the progress bar to show it's working on the current file
-            wwts_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...", clear_when_done=True)
+            bothoven_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...", clear_when_done=True)
             # for progress tracking
             done += 1
 
@@ -75,7 +75,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
             self.buf.extend(file_buf)
 
         # finish off the progress bar
-        wwts_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
+        bothoven_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
 
 
     @abstractmethod

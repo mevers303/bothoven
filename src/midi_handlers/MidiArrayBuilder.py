@@ -3,7 +3,7 @@ import numpy as np
 import mido
 import scipy.sparse
 
-from wwts_globals import NUM_FEATURES, NUM_STEPS
+from bothoven_globals import NUM_FEATURES, NUM_STEPS
 
 
 class MidiArrayBuilder:

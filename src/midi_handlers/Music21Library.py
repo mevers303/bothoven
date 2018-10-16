@@ -6,8 +6,8 @@
 import numpy as np
 from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 
-import wwts_globals
-from wwts_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
+import bothoven_globals
+from bothoven_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 from midi_handlers.MusicLibrary import MusicLibraryFlat
 
 

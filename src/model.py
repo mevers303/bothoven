@@ -9,7 +9,7 @@ import os
 import pickle
 
 from midi_handlers.MusicLibrary import MusicLibraryFlat
-from wwts_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
+from bothoven_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
 
 
 # fix random seed for reproducibility

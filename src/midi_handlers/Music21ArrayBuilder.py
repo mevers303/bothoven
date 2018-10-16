@@ -2,7 +2,7 @@ import copy
 import numpy as np
 import music21
 
-from wwts_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin, MAXIMUM_NOTE_LENGTH
+from bothoven_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin, MAXIMUM_NOTE_LENGTH
 
 
 
