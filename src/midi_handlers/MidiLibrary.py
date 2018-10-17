@@ -8,7 +8,6 @@ from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
 import scipy.sparse
 
 from midi_handlers.MusicLibrary import MusicLibraryFlat
-from bothoven_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
 
 
 class MidiLibraryFlat(MusicLibraryFlat):
@@ -22,16 +21,17 @@ class MidiLibraryFlat(MusicLibraryFlat):
         super().load_files()
 
         self.buf = scipy.sparse.vstack(self.buf, format="csr", dtype=np.byte)
+        self.NUM_FEATURES = 128 + 128 + 2  # note_on + note_off + 2 track start/end
 
 
     def step_through(self):
 
         i = 0
 
-        while i < self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
+        while i < self.buf.shape[0] - self.NUM_STEPS - 1:  # gotta leave room for the target at the end
 
-            x = self.buf[i:i + NUM_STEPS].toarray()
-            y = self.buf[i + NUM_STEPS].toarray()[0]
+            x = self.buf[i:i + self.NUM_STEPS].toarray()
+            y = self.buf[i + self.NUM_STEPS].toarray()[0]
 
             i += 1
 

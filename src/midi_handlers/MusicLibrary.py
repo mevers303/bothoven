@@ -21,6 +21,13 @@ class MusicLibrary(ABC):
         self.filenames = filenames
         self.midi = None
 
+        # number of timesteps for lstm
+        self.NUM_STEPS = 64
+        # how many features does this model have?
+        self.NUM_FEATURES = -1
+        # the batch size for training
+        self.BATCH_SIZE = 64
+
         if self.filenames is None:
             self.find_files()
 
