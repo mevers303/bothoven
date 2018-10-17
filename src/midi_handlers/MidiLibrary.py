@@ -4,13 +4,18 @@
 # Objects for managing a set of MIDI functions.
 
 import numpy as np
-from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
-import scipy.sparse
-
 from midi_handlers.MusicLibrary import MusicLibraryFlat
+from midi_handlers.MidiArrayBuilder import MidiArrayBuilder
+
 
 
 class MidiLibraryFlat(MusicLibraryFlat):
+    # number of timesteps for lstm
+    NUM_STEPS = 64
+    # how many features does this model have?
+    NUM_FEATURES = 128 + 128 + 1 + 2  # note_on + note_off + 2 track start/end
+    # the batch size for training
+    BATCH_SIZE = 64
 
     def __init__(self, base_dir="", filenames=None, autoload=True):
         super().__init__(MidiArrayBuilder, base_dir, filenames, autoload)
@@ -20,8 +25,7 @@ class MidiLibraryFlat(MusicLibraryFlat):
 
         super().load_files()
 
-        self.buf = scipy.sparse.vstack(self.buf, format="csr", dtype=np.byte)
-        self.NUM_FEATURES = 128 + 128 + 2  # note_on + note_off + 2 track start/end
+        self.buf = np.array(self.buf)
 
 
     def step_through(self):
