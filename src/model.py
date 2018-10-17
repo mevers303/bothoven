@@ -11,6 +11,7 @@ import pickle
 from midi_handlers.MidiLibrary import MidiLibraryFlat
 from midi_handlers.Music21Library import Music21LibraryFlat
 from bothoven_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
+from functions.pickle_workaround import pickle_load
 
 
 # fix random seed for reproducibility
@@ -89,7 +90,7 @@ def fit_model(_model, dataset):
 
 def main():
 
-    lib_name = "metallica_m21"
+    lib_name = "metallica_midi"
     model_name = "metallica_666555444333222111"
 
     if not os.path.exists(f"models/{model_name}"):
@@ -97,8 +98,7 @@ def main():
 
     print("Loading dataset...")
     # dataset = MidiLibrarySplit(lib_path)
-    with open(f"midi/pickles/{lib_name}.pkl", "rb") as f:
-        dataset = pickle.load(f)
+    dataset = pickle_load(f"midi/pickles/{lib_name}.pkl")
 
     print("Creating model...")
     model = create_model(model_name, dataset)
