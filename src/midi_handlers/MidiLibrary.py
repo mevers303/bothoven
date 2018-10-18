@@ -41,7 +41,7 @@ class MidiLibraryFlat(MusicLibraryFlat):
 
         data = [1 for _ in range(delay_buf.size)]
         x = np.arange(delay_buf.size)
-        y = [delay_reverse_dict[delay] for delay in delay_buf]
+        y = [self.delay_to_one_hot[delay] for delay in delay_buf]
         delay_buf_onehot = scipy.sparse.csr_matrix((data, (x, y)), shape=(delay_buf.size, unique_delays.size))
 
         # build the sparse matrix from the first iem in the tuple
