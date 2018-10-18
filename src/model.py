@@ -6,11 +6,10 @@
 import keras
 import numpy as np
 import os
-import pickle
 
 from midi_handlers.MidiLibrary import MidiLibraryFlat
 from midi_handlers.Music21Library import Music21LibraryFlat
-from bothoven_globals import NUM_STEPS, NUM_FEATURES, N_EPOCHS, BATCH_SIZE
+from bothoven_globals import N_EPOCHS
 from functions.pickle_workaround import pickle_load
 
 
@@ -25,13 +24,11 @@ def create_model(name, dataset):
 
     # CREATE THE _model
     _model = keras.models.Sequential(name=name)
-    _model.add(keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True))
-    _model.add(keras.layers.Dropout(.555))
-    _model.add(keras.layers.LSTM(units=444, return_sequences=True))
-    _model.add(keras.layers.Dropout(.333))
-    _model.add(keras.layers.LSTM(222))
-    _model.add(keras.layers.Dropout(.111))
-    _model.add(keras.layers.Dense(units=dataset.NUM_FEATURES, activation='sigmoid'))
+    _model.add(keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
+    _model.add(keras.layers.Dropout(.444))
+    _model.add(keras.layers.LSTM(units=444))
+    _model.add(keras.layers.Dropout(.444))
+    _model.add(keras.layers.Dense(units=dataset.buf.shape[1], activation='sigmoid'))
     _model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     print(_model.summary())
 
@@ -72,7 +69,7 @@ def fit_model(_model, dataset):
     logfile = os.path.join("models/", _model.name, "log.txt")
 
     steps_per_epoch = (dataset.buf.shape[0] - 1) // dataset.BATCH_SIZE # it's - 1 because the very last step is a prediction only
-    model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:02d}-{loss:.2f}.hdf5")
+    model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:03d}_{loss:.2f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
     history = _model.fit_generator(dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks)
@@ -91,7 +88,7 @@ def fit_model(_model, dataset):
 def main():
 
     lib_name = "metallica_midi"
-    model_name = "metallica_666555444333222111"
+    model_name = "metallica_444"
 
     if not os.path.exists(f"models/{model_name}"):
         os.makedirs(f"models/{model_name}")

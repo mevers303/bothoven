@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 # number of timesteps for lstm
 NUM_STEPS = 64
 # how many features does this model have?
-NUM_FEATURES = 128 + 128 + 1 + 2  # note_on + note_off + 2 track start/end
+NUM_FEATURES = 128 + 128 + 2  # note_on + note_off + 2 track start/end
 # the batch size for training
 BATCH_SIZE = 64
 
@@ -16,6 +16,7 @@ class MidiArrayBuilder:
 
         self.filename = filename
         self.buf = []
+        self.time_buf = []
 
 
     def mid_to_array(self):
@@ -49,23 +50,24 @@ class MidiArrayBuilder:
                 self.special_step(-1)
 
         if len(self.buf):
-            self.buf = [np.zeros(NUM_FEATURES, dtype=np.float64) for _ in range(NUM_STEPS - 1)] + self.buf  # the empty buf at the beginning
+            self.buf = [np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)] + self.buf  # the empty buf at the beginning
+            self.time_buf = [0 for _ in range(NUM_STEPS - 1)] + self.time_buf
 
-        return csr_matrix(np.array(self.buf, dtype=np.float64))
+        return csr_matrix(np.array(self.buf)), self.time_buf
 
 
     def special_step(self, i):
 
-        this_step = np.zeros(NUM_FEATURES, dtype=np.float64)
+        this_step = np.zeros(NUM_FEATURES)
         this_step[i] = 1
         self.buf.append(this_step)
+        self.time_buf.append(0)
 
 
     def note_step(self, note_i, delay):
 
-        this_step = np.zeros(NUM_FEATURES, dtype=np.float64)
-
+        this_step = np.zeros(NUM_FEATURES)
         this_step[note_i] = 1  # the midi note one-hot
-        this_step[256] = delay  # the duration one-hot
 
         self.buf.append(this_step)
+        self.time_buf.append(delay)
