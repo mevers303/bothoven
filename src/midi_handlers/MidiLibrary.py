@@ -16,6 +16,10 @@ class MidiLibraryFlat(MusicLibraryFlat):
 
     def __init__(self, base_dir="", filenames=None, autoload=True):
 
+        self.max_delay = 0
+        self.delay_to_one_hot = None
+        self.one_hot_to_delay = None
+
         super().__init__(MidiArrayBuilder, base_dir, filenames, autoload)
 
         # number of timesteps for lstm
@@ -23,10 +27,6 @@ class MidiLibraryFlat(MusicLibraryFlat):
         # how many features does this model have?
         # the batch size for training
         self.BATCH_SIZE = 64
-
-        self.max_delay = 0
-        self.delay_to_one_hot = None
-        self.one_hot_to_delay = None
 
 
     def load_files(self):
@@ -69,7 +69,7 @@ def main():
 
     import os
 
-    lib_name = "metallica"
+    lib_name = "bach_short"
 
     lib = MidiLibraryFlat(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default

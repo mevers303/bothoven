@@ -17,20 +17,37 @@ from functions.pickle_workaround import pickle_load
 np.random.seed(777)
 
 
+lib_name = "beatles_midi"
+model_name = lib_name + "_654321"
 
+
+def two_loss(y_true, y_pred):
+
+    a = keras.backend.categorical_crossentropy(y_true[:, :258], y_pred[:, :258])
+    b = keras.backend.categorical_crossentropy(y_true[:, 258:], y_pred[:, 258:])
+
+    return a + b
+
+def two_accuracy(y_true, y_pred):
+
+    return keras.backend.mean(keras.metrics.categorical_accuracy(y_true[:, 258], y_pred[:, :258]) + keras.metrics.categorical_accuracy(y_true[:, 258:], y_pred[:, 258:]))
 
 
 def create_model(name, dataset):
 
     # CREATE THE _model
     _model = keras.models.Sequential(name=name)
+    _model.add(keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
+    _model.add(keras.layers.Dropout(.555))
     _model.add(keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
-    _model.add(keras.layers.Dropout(.444))
-    _model.add(keras.layers.LSTM(units=444))
-    _model.add(keras.layers.Dropout(.444))
+    _model.add(keras.layers.Dropout(.333))
+    _model.add(keras.layers.LSTM(units=222))
+    _model.add(keras.layers.Dropout(.111))
     _model.add(keras.layers.Dense(units=dataset.buf.shape[1], activation='sigmoid'))
-    _model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    sgd = keras.optimizers.RMSprop(lr=1e-4, rho=0.9, epsilon=None, decay=0.0)
+    _model.compile(loss=two_loss, optimizer=sgd, metrics=[two_accuracy])
     print(_model.summary())
+
 
     save_model_structure(_model)
 
@@ -69,7 +86,7 @@ def fit_model(_model, dataset):
     logfile = os.path.join("models/", _model.name, "log.txt")
 
     steps_per_epoch = (dataset.buf.shape[0] - 1) // dataset.BATCH_SIZE # it's - 1 because the very last step is a prediction only
-    model_save_filepath = os.path.join("models/", _model.name, "epoch_{epoch:03d}_{loss:.2f}.hdf5")
+    model_save_filepath = os.path.join("models/", model_name, "epoch_{epoch:03d}_{loss:.4f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
     history = _model.fit_generator(dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks)
@@ -87,9 +104,6 @@ def fit_model(_model, dataset):
 
 def main():
 
-    lib_name = "metallica_midi"
-    model_name = "metallica_444"
-
     if not os.path.exists(f"models/{model_name}"):
         os.makedirs(f"models/{model_name}")
 
@@ -99,7 +113,8 @@ def main():
 
     print("Creating model...")
     model = create_model(model_name, dataset)
-    # model = keras.models.load_model("models/metallica_666555444333222111/epoch_04-0.04.hdf5")
+    # print("Loading model from disk...")
+    # model = keras.models.load_model("models/blink182_midi_654321/epoch_019_0.0141.hdf5")
 
     print("Fitting model...")
     fit_model(model, dataset)

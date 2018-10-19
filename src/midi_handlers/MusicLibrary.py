@@ -67,7 +67,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
         for filename in self.filenames:
 
             # update the progress bar to show it's working on the current file
-            bothoven_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...", clear_when_done=True)
+            bothoven_globals.progress_bar(done, self.filenames.size, "Buffering " + filename + "...")
             # for progress tracking
             done += 1
 
@@ -82,7 +82,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
             self.buf.append(file_buf)
 
         # finish off the progress bar
-        bothoven_globals.progress_bar(done, self.filenames.size, "Buffering complete!", clear_when_done=True)
+        bothoven_globals.progress_bar(done, self.filenames.size, "Buffering complete!")
 
 
     @abstractmethod
@@ -127,7 +127,7 @@ class MusicLibrarySplit(MusicLibrary):
         self.test_lib = None
         self.flat_library_type = flat_library_type
 
-        super().__init__(self, array_builder_type, base_dir, filenames, autoload)
+        super().__init__(array_builder_type, base_dir, filenames, autoload)
 
 
     def split_files(self):
