@@ -69,7 +69,7 @@ def main():
 
     import os
 
-    lib_name = "bach_short"
+    lib_name = "beatles"
 
     lib = MidiLibraryFlat(os.path.join("midi", lib_name))
     # lib.load()  # autoload is on by default

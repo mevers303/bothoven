@@ -7,8 +7,7 @@ import keras
 import numpy as np
 import os
 
-from midi_handlers.MidiLibrary import MidiLibraryFlat
-from midi_handlers.Music21Library import Music21LibraryFlat
+from midi_handlers.SplitOutputMidiLibrary import SplitOutputMidiLibraryFlat
 from bothoven_globals import N_EPOCHS
 from functions.pickle_workaround import pickle_load
 
@@ -17,7 +16,7 @@ from functions.pickle_workaround import pickle_load
 np.random.seed(777)
 
 
-lib_name = "beatles_midi"
+lib_name = "beatles_midi_split_output"
 model_name = lib_name + "_654321"
 
 
@@ -33,21 +32,36 @@ def two_accuracy(y_true, y_pred):
     return keras.backend.mean(keras.metrics.categorical_accuracy(y_true[:, 258], y_pred[:, :258]) + keras.metrics.categorical_accuracy(y_true[:, 258:], y_pred[:, 258:]))
 
 
-def create_model(name, dataset):
+def create_model(dataset):
 
-    # CREATE THE _model
-    _model = keras.models.Sequential(name=name)
-    _model.add(keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
-    _model.add(keras.layers.Dropout(.555))
-    _model.add(keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
-    _model.add(keras.layers.Dropout(.333))
-    _model.add(keras.layers.LSTM(units=222))
-    _model.add(keras.layers.Dropout(.111))
-    _model.add(keras.layers.Dense(units=dataset.buf.shape[1], activation='sigmoid'))
-    sgd = keras.optimizers.RMSprop(lr=1e-4, rho=0.9, epsilon=None, decay=0.0)
-    _model.compile(loss=two_loss, optimizer=sgd, metrics=[two_accuracy])
-    print(_model.summary())
+    # # CREATE THE _model
+    # _model = keras.models.Sequential(name=name)
+    # _model.add(keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
+    # _model.add(keras.layers.Dropout(.555))
+    # _model.add(keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True))
+    # _model.add(keras.layers.Dropout(.333))
+    # _model.add(keras.layers.LSTM(units=222))
+    # _model.add(keras.layers.Dropout(.111))
+    # _model.add(keras.layers.Dense(units=dataset.buf.shape[1], activation='sigmoid'))
+    # sgd = keras.optimizers.RMSprop(lr=1e-4, rho=0.9, epsilon=None, decay=0.0)
+    # _model.compile(loss=two_loss, optimizer=sgd, metrics=[two_accuracy])
+    # print(_model.summary())
 
+    inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.buf.shape[1]))
+    x = keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(inputs)
+    x = keras.layers.Dropout(.555)(x)
+    x = keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(x)
+    x = keras.layers.Dropout(.333)(x)
+    x = keras.layers.LSTM(units=222)(x)
+    x = keras.layers.Dropout(.111)(x)
+
+    note_output = keras.layers.Dense(name="note_output", units=dataset.buf.shape[1], activation='softmax')(x)
+    delay_output = keras.layers.Dense(name="delay_output", units=dataset.buf.shape[1], activation='softmax')(x)
+
+    _model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, delay_output])
+    optimizer = keras.optimizers.RMSprop(lr=1e-4, rho=0.9, epsilon=None, decay=0.0)
+    losses = {"note_output": "categorical_crossentropy", "delay_output": "categorical_crossentropy"}
+    _model.compile(optimizer=optimizer, loss=losses, metrics="categorical_accuracy")
 
     save_model_structure(_model)
 
