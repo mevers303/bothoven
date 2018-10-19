@@ -55,13 +55,14 @@ def create_model(dataset):
     x = keras.layers.LSTM(units=222)(x)
     x = keras.layers.Dropout(.111)(x)
 
-    note_output = keras.layers.Dense(name="note_output", units=dataset.buf.shape[1], activation='softmax')(x)
-    delay_output = keras.layers.Dense(name="delay_output", units=dataset.buf.shape[1], activation='softmax')(x)
+    note_output = keras.layers.Dense(name="note_output", units=258, activation='softmax')(x)
+    delay_output = keras.layers.Dense(name="delay_output", units=dataset.buf.shape[1] - 258, activation='softmax')(x)
 
     _model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, delay_output])
-    optimizer = keras.optimizers.RMSprop(lr=1e-4, rho=0.9, epsilon=None, decay=0.0)
+    optimizer = keras.optimizers.RMSprop(lr=1e-3, rho=0.9, epsilon=None, decay=0.0)
     losses = {"note_output": "categorical_crossentropy", "delay_output": "categorical_crossentropy"}
-    _model.compile(optimizer=optimizer, loss=losses, metrics="categorical_accuracy")
+    metrics = {"note_output": "categorical_accuracy", "delay_output": "categorical_accuracy"}
+    _model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
     save_model_structure(_model)
 
@@ -126,7 +127,7 @@ def main():
     dataset = pickle_load(f"midi/pickles/{lib_name}.pkl")
 
     print("Creating model...")
-    model = create_model(model_name, dataset)
+    model = create_model(dataset)
     # print("Loading model from disk...")
     # model = keras.models.load_model("models/blink182_midi_654321/epoch_019_0.0141.hdf5")
 

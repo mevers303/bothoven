@@ -19,27 +19,26 @@ class SplitOutputMidiLibraryFlat(MidiLibraryFlat):
         batch_x = []
         batch_y = []
 
-        def give_yield():
-            global batch_i, batch_x, batch_y
-            yield_y = np.array(batch_y)
-            yield np.array(batch_x), {"note_output": yield_y[:, :258], "delay_output": yield_y[:, 258:]}
-            batch_x.clear()
-            batch_y.clear()
-            batch_i = 0
-
-
         while True:
 
             for x, y in self.step_through():
 
                 if batch_i >= self.BATCH_SIZE:
-                    give_yield()
+                    yield_y = np.array(batch_y)
+                    yield np.array(batch_x), {"note_output": yield_y[:, :258], "delay_output": yield_y[:, 258:]}
+                    batch_x.clear()
+                    batch_y.clear()
+                    batch_i = 0
 
                 batch_x.append(x)
                 batch_y.append(y)
                 batch_i += 1
 
-            give_yield()
+            yield_y = np.array(batch_y)
+            yield np.array(batch_x), {"note_output": yield_y[:, :258], "delay_output": yield_y[:, 258:]}
+            batch_x.clear()
+            batch_y.clear()
+            batch_i = 0
 
 
 def main():
