@@ -36,6 +36,8 @@ class MidiArrayBuilder:
                 # it will never get here if it never finds a note
                 if not found_a_note:
                     found_a_note = True
+                    self.buf.extend([np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)])
+                    self.time_buf.extend([0 for _ in range(NUM_STEPS - 1)])
                     self.special_step(-2)  # start_track one-hot
 
                 # find the one-hot note
@@ -48,10 +50,6 @@ class MidiArrayBuilder:
             if found_a_note:
                 # slide a start_end in there
                 self.special_step(-1)
-
-        if len(self.buf):
-            self.buf = [np.zeros(NUM_FEATURES) for _ in range(NUM_STEPS - 1)] + self.buf  # the empty buf at the beginning
-            self.time_buf = [0 for _ in range(NUM_STEPS - 1)] + self.time_buf
 
         return csr_matrix(np.array(self.buf)), self.time_buf
 

@@ -16,8 +16,8 @@ from functions.pickle_workaround import pickle_load
 np.random.seed(777)
 
 
-lib_name = "beatles_midi_split_output"
-model_name = lib_name + "_654321"
+lib_name = "bach_short_midi_split_output"
+model_name = lib_name + "_4_layer_6543"
 
 
 def two_loss(y_true, y_pred):
@@ -49,21 +49,24 @@ def create_model(dataset):
 
     inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.buf.shape[1]))
     x = keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(inputs)
-    x = keras.layers.Dropout(.555)(x)
+    x = keras.layers.Dropout(.222)(x)
+    x = keras.layers.LSTM(units=555, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(x)
+    x = keras.layers.Dropout(.222)(x)
     x = keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(x)
-    x = keras.layers.Dropout(.333)(x)
-    x = keras.layers.LSTM(units=222)(x)
-    x = keras.layers.Dropout(.111)(x)
+    x = keras.layers.Dropout(.222)(x)
+    x = keras.layers.LSTM(units=333, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]))(x)
+    x = keras.layers.Dropout(.222)(x)
 
     note_output = keras.layers.Dense(name="note_output", units=258, activation='softmax')(x)
     delay_output = keras.layers.Dense(name="delay_output", units=dataset.buf.shape[1] - 258, activation='softmax')(x)
 
     _model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, delay_output])
-    optimizer = keras.optimizers.RMSprop(lr=1e-3, rho=0.9, epsilon=None, decay=0.0)
+    optimizer = keras.optimizers.RMSprop(lr=6.66e-5, rho=0.9, epsilon=None, decay=0.0)
     losses = {"note_output": "categorical_crossentropy", "delay_output": "categorical_crossentropy"}
     metrics = {"note_output": "categorical_accuracy", "delay_output": "categorical_accuracy"}
     _model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
+    print(_model.summary())
     save_model_structure(_model)
 
     return _model
@@ -129,7 +132,7 @@ def main():
     print("Creating model...")
     model = create_model(dataset)
     # print("Loading model from disk...")
-    # model = keras.models.load_model("models/blink182_midi_654321/epoch_019_0.0141.hdf5")
+    # model = keras.models.load_model("/media/mark/Data/Documents/python/bothoven/models/beatles_midi_split_output_654321/epoch_041_1.9419.hdf5")
 
     print("Fitting model...")
     fit_model(model, dataset)
