@@ -2,7 +2,7 @@ import copy
 import numpy as np
 import music21
 
-from bothoven_globals import NUM_FEATURES, NUM_STEPS, get_note_duration_bin, MAXIMUM_NOTE_LENGTH
+from bothoven_globals import NUM_STEPS
 
 
 
@@ -45,7 +45,7 @@ class Music21ArrayBuilder:
         elif msg.isChord:
             self.buf.append([-2, -2, -2])  # chord_start one-hot
             for note in msg._notes:
-                self.buf.append([note.pitch.midi, note.quarterLength, note.beat])
+                self.buf.append([note.pitch.midi, note.quarterLength, msg.beat])
             self.buf.append([-3, -3, -3])  # chord_end one-hot
         else:
             raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
