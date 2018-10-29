@@ -30,6 +30,8 @@ class MusicLibrary(ABC):
 
         if self.filenames is None:
             self.find_files()
+        elif type(self.filenames) is list:
+            self.filenames = np.array(self.filenames)
 
         if autoload:
             self.load()
@@ -128,7 +130,7 @@ class MusicLibraryFlat(MusicLibrary):
 
 class MusicLibrarySplit(MusicLibrary):
 
-    def __init__(self, flat_library_type, base_dir="", filenames=None, autoload=True):
+    def __init__(self, array_builder_type, flat_library_type, base_dir="", filenames=None, autoload=True):
 
         self.filenames_train = None
         self.filenames_test = None
@@ -136,7 +138,7 @@ class MusicLibrarySplit(MusicLibrary):
         self.test_lib = None
         self.flat_library_type = flat_library_type
 
-        super().__init__(self.flat_library_type.array_builder_type, base_dir, filenames, autoload)
+        super().__init__(array_builder_type, base_dir, filenames, autoload)
 
 
     def split_files(self):

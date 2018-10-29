@@ -63,7 +63,7 @@ class Music21LibraryFlat(MusicLibraryFlat):
 class Music21LibrarySplit(MusicLibrarySplit):
 
     def __init__(self, base_dir="", filenames=None, autoload=True):
-        super().__init__(MusicLibraryFlat, base_dir, filenames, autoload)
+        super().__init__(Music21ArrayBuilder, Music21LibraryFlat, base_dir, filenames, autoload)
 
 
 def main():
