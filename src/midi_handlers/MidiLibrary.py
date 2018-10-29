@@ -51,19 +51,6 @@ class MidiLibraryFlat(MusicLibraryFlat):
         self.buf = scipy.sparse.hstack((self.buf, delay_buf_onehot), format="csr")
 
 
-    def step_through(self):
-
-        i = 0
-
-        while i < self.buf.shape[0] - self.NUM_STEPS - 1:  # gotta leave room for the target at the end
-
-            x = self.buf[i:i + self.NUM_STEPS].toarray()
-            y = self.buf[i + self.NUM_STEPS].toarray()[0]
-
-            i += 1
-
-            yield x, y
-
 
 def main():
 
