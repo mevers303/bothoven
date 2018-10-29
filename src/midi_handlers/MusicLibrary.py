@@ -47,7 +47,7 @@ class MusicLibrary(ABC):
 
 
 
-class MusicLibraryFlat(MusicLibrary, ABC):
+class MusicLibraryFlat(MusicLibrary):
 
     def __init__(self, array_builder_type, base_dir="", filenames=None, autoload=True):
 
@@ -85,9 +85,18 @@ class MusicLibraryFlat(MusicLibrary, ABC):
         bothoven_globals.progress_bar(done, self.filenames.size, "Buffering complete!")
 
 
-    @abstractmethod
     def step_through(self):
-        pass
+
+        i = 0
+
+        while i < self.buf.shape[0] - self.NUM_STEPS - 1:  # gotta leave room for the target at the end
+
+            x = self.buf[i:i + self.NUM_STEPS].toarray()
+            y = self.buf[i + self.NUM_STEPS].toarray()[0]
+
+            i += 1
+
+            yield x, y
 
 
     def next_batch(self):
@@ -119,7 +128,7 @@ class MusicLibraryFlat(MusicLibrary, ABC):
 
 class MusicLibrarySplit(MusicLibrary):
 
-    def __init__(self, array_builder_type, flat_library_type, base_dir="", filenames=None, autoload=True):
+    def __init__(self, flat_library_type, base_dir="", filenames=None, autoload=True):
 
         self.filenames_train = None
         self.filenames_test = None
@@ -127,12 +136,12 @@ class MusicLibrarySplit(MusicLibrary):
         self.test_lib = None
         self.flat_library_type = flat_library_type
 
-        super().__init__(array_builder_type, base_dir, filenames, autoload)
+        super().__init__(self.flat_library_type.array_builder_type, base_dir, filenames, autoload)
 
 
     def split_files(self):
 
-        test_size = int(self.filenames.size / 4)
+        test_size = self.filenames.size // 10
         test_indices = np.random.choice(self.filenames.size, size=test_size, replace=False)
         train_indices = np.delete(np.arange(self.filenames.size), test_indices)
 
