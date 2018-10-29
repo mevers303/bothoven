@@ -4,10 +4,10 @@
 # Objects for managing a set of MIDI functions.
 
 import numpy as np
+import scipy.sparse as sps
 from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 
-import bothoven_globals
-from midi_handlers.MusicLibrary import MusicLibraryFlat
+from midi_handlers.MusicLibrary import MusicLibraryFlat, MusicLibrarySplit
 
 
 class Music21LibraryFlat(MusicLibraryFlat):
@@ -16,42 +16,66 @@ class Music21LibraryFlat(MusicLibraryFlat):
 
         super().__init__(Music21ArrayBuilder, base_dir, filenames, autoload)
 
-        self.beat_norm_max = 0
-        self.NUM_FEATURES = 128 + 1 + len(bothoven_globals.DURATION_BINS) + 1 + 2 + 2  # midi notes + rest note + time bins + 1 beat offset + 2 chord on/off + 2 track start/end
+        self.note_to_one_hot = None
+        self.one_hot_to_note = None
+        self.duration_to_one_hot = None
+        self.one_hot_to_duration = None
+        self.offset_to_one_hot = None
+        self.one_hot_to_offset = None
 
 
     def load_files(self):
 
         super().load_files()
-
-        self.buf = np.vstack(self.buf)
-
-        self.beat_norm_max = self.buf[:, -5].max()
-        self.buf[:, -5] = self.buf[:, -5] / self.beat_norm_max
+        self.explode_buf()
 
 
-    def step_through(self):
+    def explode_buf(self):
 
-        i = 0
+        temp_buf = np.vstack(self.buf)
+        notes = temp_buf[:, 0]
+        durations = temp_buf[:, 1]
+        offsets = temp_buf[:, 2]
 
-        while i < self.buf.shape[0] - self.NUM_STEPS - 1:  # gotta leave room for the target at the end
+        self.note_to_one_hot, self.one_hot_to_note = self.convert_to_one_hot(notes)
+        self.duration_to_one_hot, self.one_hot_to_duration = self.convert_to_one_hot(durations)
+        self.offset_to_one_hot, self.one_hot_to_offset = self.convert_to_one_hot(offsets)
+        self.NUM_FEATURES =  + len(self.note_to_one_hot) + len(self.duration_to_one_hot) + len(self.offset_to_one_hot)
 
-            x = self.buf[i:i + self.NUM_STEPS]
-            y = self.buf[i + self.NUM_STEPS]
+        x = [i for i in range(temp_buf.shape[0])] * 3
+        y = [self.note_to_one_hot[x] for x in notes] + \
+            [self.duration_to_one_hot[x] + len(self.note_to_one_hot) for x in durations] + \
+            [self.offset_to_one_hot[x] + len(self.note_to_one_hot) + len(self.duration_to_one_hot) for x in offsets]
+        data = [1 for _ in range(temp_buf.shape[0] * 3)]
 
-            i += 1
+        self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
 
-            yield x, y
+
+    @staticmethod
+    def convert_to_one_hot(x):
+        unique_x = np.unique(x)
+        x_to_one_hot = {item: i for i, item in enumerate(unique_x)}
+        one_hot_to_x = {i: item for i, item in enumerate(unique_x)}
+
+        return x_to_one_hot, one_hot_to_x
+
+
+class Music21LibrarySplit(MusicLibrarySplit):
+
+    def __init__(self, base_dir="", filenames=None, autoload=True):
+        super().__init__(MusicLibraryFlat, base_dir, filenames, autoload)
 
 
 def main():
 
     import os
     import pickle
+    from music21.corpus import getComposer
 
-    lib_name = "metallica"
+    lib_name = "bach"
+    filenames = [x.as_posix() for x in getComposer("bach")]
 
-    lib = Music21LibraryFlat(os.path.join("midi", lib_name))
+    lib = Music21LibrarySplit(filenames=filenames)
     # lib = Music21LibraryFlat(filenames=np.array([str(x) for x in music21.corpus.getComposer("bach")]))
     # lib.load()  # autoload is on by default
 
