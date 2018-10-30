@@ -190,7 +190,7 @@ def progress_bar(done, total, text="", clear_when_done=False, resolution=0.333):
         stdout.write("\n" + (' ' * 120) + "\r")
         stdout.write(text)
 
-    if i == 100:
+    if i >= 100:
 
         if clear_when_done:
             stdout.write('\r')
