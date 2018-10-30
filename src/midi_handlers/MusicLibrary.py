@@ -66,6 +66,8 @@ class MusicLibraryFlat(MusicLibrary):
         self.buf = []
         done = 0
 
+        bad_files = []
+
         for filename in self.filenames:
 
             # update the progress bar to show it's working on the current file
@@ -76,8 +78,9 @@ class MusicLibraryFlat(MusicLibrary):
             try:
                 file_buf = self.array_builder_type(filename).mid_to_array()
             except Exception as e:
-                print("\nThere was an error buffering", filename)
-                print(e)
+                bad_files.append(done - 1)  # done - 1 is the index
+                print("\nError!", e)
+                print()
                 continue
 
             # slap this file's buffer onto the back of our running buffer
@@ -85,6 +88,9 @@ class MusicLibraryFlat(MusicLibrary):
 
         # finish off the progress bar
         bothoven_globals.progress_bar(done, self.filenames.size, "Buffering complete!")
+
+        self.filenames = np.delete(self.filenames, bad_files)
+
 
 
     def step_through(self):

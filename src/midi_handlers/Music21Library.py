@@ -41,7 +41,9 @@ class Music21Library(MusicLibraryFlat):
         self.note_to_one_hot, self.one_hot_to_note = self.convert_to_one_hot(notes)
         self.duration_to_one_hot, self.one_hot_to_duration = self.convert_to_one_hot(durations)
         self.offset_to_one_hot, self.one_hot_to_offset = self.convert_to_one_hot(offsets)
-        self.NUM_FEATURES = + len(self.note_to_one_hot) + len(self.duration_to_one_hot) + len(self.offset_to_one_hot)
+        self.NUM_FEATURES = len(self.note_to_one_hot) + len(self.duration_to_one_hot) + len(self.offset_to_one_hot)
+
+        print(f"Found {temp_buf.shape[0]} rows with {self.NUM_FEATURES} features!")
 
 
     @staticmethod
@@ -91,7 +93,10 @@ class Music21LibraryFlat(Music21Library):
             [self.offset_to_one_hot[x] + len(self.note_to_one_hot) + len(self.duration_to_one_hot) for x in offsets]
         data = [1 for _ in range(temp_buf.shape[0] * 3)]
 
-        self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
+        # self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
+        self.buf = np.zeros((temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
+        for i, j, d in zip(x, y, data):
+            self.buf[i, j] = d
 
 
 class Music21LibrarySplit(Music21Library):
