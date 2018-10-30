@@ -6,6 +6,7 @@
 import numpy as np
 import scipy.sparse as sps
 from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
+from functions.pickle_workaround import pickle_dump
 
 from midi_handlers.MusicLibrary import MusicLibrary, MusicLibraryFlat, MusicLibrarySplit
 
@@ -24,8 +25,8 @@ class Music21Library(MusicLibraryFlat):
         super().__init__(Music21ArrayBuilder, base_dir, filenames, autoload)
 
 
-    def load(self):
-        super().load()
+    def load_files(self):
+        super().load_files()
         if not self.note_to_one_hot:
             self.get_one_hots()
 
@@ -76,8 +77,8 @@ class Music21LibraryFlat(Music21Library):
             self.load_files()
 
 
-    def load(self):
-        super().load()
+    def load_files(self):
+        super().load_files()
         self.explode_buf()
 
 
@@ -93,10 +94,43 @@ class Music21LibraryFlat(Music21Library):
             [self.offset_to_one_hot[x] + len(self.note_to_one_hot) + len(self.duration_to_one_hot) for x in offsets]
         data = [1 for _ in range(temp_buf.shape[0] * 3)]
 
-        # self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
-        self.buf = np.zeros((temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
-        for i, j, d in zip(x, y, data):
-            self.buf[i, j] = d
+        self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
+
+
+    def next_batch(self):
+
+        batch_i = 0
+        batch_x = []
+        batch_y = []
+
+        while True:
+
+            for x, y in self.step_through():
+
+                if batch_i >= self.BATCH_SIZE:
+                    yield_y = np.array(batch_y)
+                    yield np.array(batch_x), {
+                                              "n": yield_y[:, :len(self.note_to_one_hot)],
+                                              "d": yield_y[:, len(self.note_to_one_hot):len(self.note_to_one_hot) + len(self.duration_to_one_hot)],
+                                              "o": yield_y[:, len(self.note_to_one_hot) + len(self.duration_to_one_hot):]
+                                             }
+                    batch_x.clear()
+                    batch_y.clear()
+                    batch_i = 0
+
+                batch_x.append(x)
+                batch_y.append(y)
+                batch_i += 1
+
+            yield_y = np.array(batch_y)
+            yield np.array(batch_x), {
+                                      "n": yield_y[:, :len(self.note_to_one_hot)],
+                                      "d": yield_y[:, len(self.note_to_one_hot):len(self.note_to_one_hot) + len(self.duration_to_one_hot)],
+                                      "o": yield_y[:, len(self.note_to_one_hot) + len(self.duration_to_one_hot):]
+                                     }
+            batch_x.clear()
+            batch_y.clear()
+            batch_i = 0
 
 
 class Music21LibrarySplit(Music21Library):
@@ -111,8 +145,8 @@ class Music21LibrarySplit(Music21Library):
         super().__init__(base_dir, filenames, autoload)
 
 
-    def load(self):
-        super().load()
+    def load_files(self):
+        super().load_files()
         self.split_files()
 
 
@@ -148,10 +182,10 @@ class Music21LibrarySplit(Music21Library):
 
         del self.buf
 
+
 def main():
 
     import os
-    import pickle
 
     lib_name = "bach_short"
 
@@ -161,8 +195,7 @@ def main():
     # lib = Music21LibrarySplit(filenames=filenames)
 
     print("Pickling...")
-    with open(os.path.join(f"midi/pickles/{lib_name}_m21.pkl"), "wb") as f:
-        pickle.dump(lib, f)
+    pickle_dump(lib, f"midi/pickles/{lib_name}_m21.pkl")
     print("Done!")
 
 

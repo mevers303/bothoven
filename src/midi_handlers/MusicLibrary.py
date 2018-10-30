@@ -8,7 +8,7 @@ import numpy as np
 
 from functions.file_functions import get_filenames
 import bothoven_globals
-from bothoven_globals import BATCH_SIZE, NUM_FEATURES, NUM_STEPS
+from bothoven_globals import BATCH_SIZE
 
 
 
@@ -34,7 +34,7 @@ class MusicLibrary(ABC):
             self.filenames = np.array(self.filenames)
 
         if autoload:
-            self.load()
+            self.load_files()
 
 
     def find_files(self):
@@ -44,7 +44,7 @@ class MusicLibrary(ABC):
 
 
     @abstractmethod
-    def load(self):
+    def load_files(self):
         pass
 
 
@@ -55,10 +55,6 @@ class MusicLibraryFlat(MusicLibrary):
 
         self.buf = None
         MusicLibrary.__init__(self, array_builder_type, base_dir, filenames, autoload)
-
-
-    def load(self):
-        self.load_files()
 
 
     def load_files(self):
@@ -134,7 +130,7 @@ class MusicLibraryFlat(MusicLibrary):
 
 
 
-class MusicLibrarySplit(MusicLibrary):
+class MusicLibrarySplit(MusicLibrary, ABC):
 
     def __init__(self, array_builder_type, flat_library_type, base_dir="", filenames=None, autoload=True):
 
@@ -161,30 +157,11 @@ class MusicLibrarySplit(MusicLibrary):
         self.test_lib = self.flat_library_type(filenames=self.filenames_test)
 
 
-    def load(self):
+    def load_files(self):
         self.split_files()
 
     def step_through(self):
         pass
-
-
-
-
-def main():
-
-    import os
-    import pickle
-
-    lib_name = "metallica_m21"
-
-    lib = MusicLibraryFlat(os.path.join("midi", lib_name))
-    # lib.load()  # autoload is on by default
-
-    print("Pickling...")
-    with open(os.path.join(f"midi/pickles/{lib_name}.pkl"), "wb") as f:
-        pickle.dump(lib, f)
-    print("Done!")
-
 
 
 if __name__ == "__main__":

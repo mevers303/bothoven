@@ -7,7 +7,7 @@ import keras
 import numpy as np
 import os
 
-from midi_handlers.SplitOutputMidiLibrary import SplitOutputMidiLibraryFlat
+from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
 from bothoven_globals import N_EPOCHS
 from functions.pickle_workaround import pickle_load
 
@@ -16,20 +16,13 @@ from functions.pickle_workaround import pickle_load
 np.random.seed(777)
 
 
-lib_name = "bach_short_midi_split_output"
-model_name = lib_name + "_4_layer_6543"
+lib_name = "bach_short_m21"
+model_name = lib_name + "_3_layer_666333"
 
 
-def two_loss(y_true, y_pred):
-
-    a = keras.backend.categorical_crossentropy(y_true[:, :258], y_pred[:, :258])
-    b = keras.backend.categorical_crossentropy(y_true[:, 258:], y_pred[:, 258:])
-
-    return a + b
-
-def two_accuracy(y_true, y_pred):
-
-    return keras.backend.mean(keras.metrics.categorical_accuracy(y_true[:, 258], y_pred[:, :258]) + keras.metrics.categorical_accuracy(y_true[:, 258:], y_pred[:, 258:]))
+note_one_hot_len = 0
+duration_one_hot_len = 0
+offset_one_hot_len = 0
 
 
 def create_model(dataset):
@@ -47,23 +40,22 @@ def create_model(dataset):
     # _model.compile(loss=two_loss, optimizer=sgd, metrics=[two_accuracy])
     # print(_model.summary())
 
-    inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.buf.shape[1]))
-    x = keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(inputs)
-    x = keras.layers.Dropout(.222)(x)
-    x = keras.layers.LSTM(units=555, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(x)
-    x = keras.layers.Dropout(.222)(x)
-    x = keras.layers.LSTM(units=444, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]), return_sequences=True)(x)
-    x = keras.layers.Dropout(.222)(x)
-    x = keras.layers.LSTM(units=333, input_shape=(dataset.NUM_STEPS, dataset.buf.shape[1]))(x)
-    x = keras.layers.Dropout(.222)(x)
+    inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES))
+    x = keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True)(inputs)
+    x = keras.layers.Dropout(.333)(x)
+    x = keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True)(x)
+    x = keras.layers.Dropout(.333)(x)
+    x = keras.layers.LSTM(units=666, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES))(x)
+    x = keras.layers.Dropout(.333)(x)
 
-    note_output = keras.layers.Dense(name="note_output", units=258, activation='softmax')(x)
-    delay_output = keras.layers.Dense(name="delay_output", units=dataset.buf.shape[1] - 258, activation='softmax')(x)
+    note_output = keras.layers.Dense(name="n", units=len(dataset.note_to_one_hot), activation='softmax')(x)
+    duration_output = keras.layers.Dense(name="d", units=len(dataset.duration_to_one_hot), activation='softmax')(x)
+    offset_output = keras.layers.Dense(name="o", units=len(dataset.offset_to_one_hot), activation='softmax')(x)
 
-    _model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, delay_output])
+    _model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, duration_output, offset_output])
     optimizer = keras.optimizers.RMSprop(lr=6.66e-5, rho=0.9, epsilon=None, decay=0.0)
-    losses = {"note_output": "categorical_crossentropy", "delay_output": "categorical_crossentropy"}
-    metrics = {"note_output": "categorical_accuracy", "delay_output": "categorical_accuracy"}
+    losses = {"n": "categorical_crossentropy", "d": "categorical_crossentropy", "o": "categorical_crossentropy"}
+    metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
     _model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
     print(_model.summary())
@@ -103,11 +95,12 @@ def fit_model(_model, dataset):
 
     logfile = os.path.join("models/", _model.name, "log.txt")
 
-    steps_per_epoch = (dataset.buf.shape[0] - 1) // dataset.BATCH_SIZE # it's - 1 because the very last step is a prediction only
+    steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // dataset.BATCH_SIZE # it's - 1 because the very last step is a prediction only
+    validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // dataset.BATCH_SIZE
     model_save_filepath = os.path.join("models/", model_name, "epoch_{epoch:03d}_{loss:.4f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='loss')]
 
-    history = _model.fit_generator(dataset.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks)
+    history = _model.fit_generator(dataset.train_lib.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS, callbacks=callbacks, validation_data=dataset.test_lib.next_batch(), validation_steps=validation_steps_per_epoch)
 
     with open(logfile, "a") as f:
         f.write(str(history))
