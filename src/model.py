@@ -52,6 +52,9 @@ def create_model(dataset):
     model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
     save_model_structure(model)
+    # delete the old tensorboard log file
+    if os.path.exists(f"tensorboard/{model.name}"):
+        shutil.rmtree(f"tensorboard/{model.name}")
 
     return model
 
@@ -91,9 +94,6 @@ def save_model_structure(model):
 def fit_model(model, dataset, start_epoch):
 
     logfile = os.path.join("models/", model.name, "log.txt")
-    # delete the old tensorboard log file
-    if os.path.exists(f"tensorboard/{model.name}"):
-        shutil.rmtree(f"tensorboard/{model.name}")
 
     steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // dataset.BATCH_SIZE # it's - 1 because the very last step is a prediction only
     validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // dataset.BATCH_SIZE
