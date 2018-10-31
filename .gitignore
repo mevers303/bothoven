@@ -6,3 +6,4 @@ src/__pycache__/
 models/
 src/functions/__pycache__/
 output/
+tensorboard/
