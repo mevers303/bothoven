@@ -135,12 +135,13 @@ class Music21LibraryFlat(Music21Library):
 
 class Music21LibrarySplit(Music21Library):
 
-    def __init__(self, base_dir="", filenames=None, autoload=True):
+    def __init__(self, base_dir="", filenames=None, autoload=True, split_ratio=0.25):
 
         self.train_indices = None
         self.test_indices = None
         self.train_lib = None
         self.test_lib = None
+        self.split_ratio = split_ratio
 
         super().__init__(base_dir, filenames, autoload)
 
@@ -152,7 +153,7 @@ class Music21LibrarySplit(Music21Library):
 
     def split_files(self):
 
-        test_size = self.filenames.size // 10
+        test_size = round(self.filenames.size * self.split_ratio)
         self.test_indices = np.random.choice(self.filenames.size, size=test_size, replace=False)
         self.train_indices = np.delete(np.arange(self.filenames.size), self.test_indices)
 
