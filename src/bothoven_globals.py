@@ -37,9 +37,9 @@ del this_bin  # get up on outta here
 # the number of steps in the model
 NUM_STEPS = 64
 # number of epochs to train for
-N_EPOCHS = 100
+N_EPOCHS = 25
 # the batch size for training
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 
 
 

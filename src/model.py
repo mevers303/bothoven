@@ -18,8 +18,13 @@ from functions.pickle_workaround import pickle_load
 np.random.seed(777)
 
 
-lib_name = "chopin_2hand_m21"
-model_name = lib_name + "_5_layer_666333"
+units = 256
+dropout = .333
+lr = 6.66e-5
+decay = 0
+
+lib_name = "bach_short_m21"
+model_name = lib_name + f"_5_layer_u{units}_dr{dropout}_lr{lr:.2e}_d{decay}"
 
 
 note_one_hot_len = 0
@@ -30,23 +35,23 @@ offset_one_hot_len = 0
 def create_model(dataset):
 
     inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES))
-    x = keras.layers.LSTM(units=512, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True)(inputs)
-    x = keras.layers.Dropout(.333)(x)
-    x = keras.layers.LSTM(units=512, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True)(x)
-    x = keras.layers.Dropout(.333)(x)
-    x = keras.layers.LSTM(units=512, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True)(x)
-    x = keras.layers.Dropout(.333)(x)
-    x = keras.layers.LSTM(units=512, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES), return_sequences=True)(x)
-    x = keras.layers.Dropout(.333)(x)
-    x = keras.layers.LSTM(units=512, input_shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES))(x)
-    x = keras.layers.Dropout(.333)(x)
+    x = keras.layers.LSTM(units=units, return_sequences=True)(inputs)
+    x = keras.layers.Dropout(dropout)(x)
+    x = keras.layers.LSTM(units=units, return_sequences=True)(x)
+    x = keras.layers.Dropout(dropout)(x)
+    x = keras.layers.LSTM(units=units, return_sequences=True)(x)
+    x = keras.layers.Dropout(dropout)(x)
+    x = keras.layers.LSTM(units=units, return_sequences=True)(x)
+    x = keras.layers.Dropout(dropout)(x)
+    x = keras.layers.LSTM(units=units)(x)
+    x = keras.layers.Dropout(dropout)(x)
 
     note_output = keras.layers.Dense(name="n", units=len(dataset.note_to_one_hot), activation='softmax')(x)
     duration_output = keras.layers.Dense(name="d", units=len(dataset.duration_to_one_hot), activation='softmax')(x)
     offset_output = keras.layers.Dense(name="o", units=len(dataset.offset_to_one_hot), activation='softmax')(x)
 
     model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, duration_output, offset_output])
-    optimizer = keras.optimizers.RMSprop(lr=6.66e-5, rho=0.9, epsilon=None, decay=0.0)
+    optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
     losses = {"n": "categorical_crossentropy", "d": "categorical_crossentropy", "o": "categorical_crossentropy"}
     metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
     model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
@@ -76,9 +81,9 @@ def load_model(name):
 
     if best_epoch:
         print(f"Loading model from disk (epoch {best_epoch})...")
-        return keras.models.load_model(os.listdir(os.path.join("models/", name, best_file))), best_epoch
+        return keras.models.load_model(os.path.join("models/", name, best_file)), best_epoch
     else:
-        return None, 10
+        return None, 0
 
 
 def save_model_structure(model):
