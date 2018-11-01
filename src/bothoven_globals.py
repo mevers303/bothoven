@@ -39,7 +39,7 @@ NUM_STEPS = 64
 # number of epochs to train for
 N_EPOCHS = 25
 # the batch size for training
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 
 
 

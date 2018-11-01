@@ -7,6 +7,7 @@ import numpy as np
 import scipy.sparse as sps
 from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 from functions.pickle_workaround import pickle_dump
+from bothoven_globals import BATCH_SIZE
 
 from midi_handlers.MusicLibrary import MusicLibrary, MusicLibraryFlat, MusicLibrarySplit
 
@@ -107,7 +108,7 @@ class Music21LibraryFlat(Music21Library):
 
             for x, y in self.step_through():
 
-                if batch_i >= self.BATCH_SIZE:
+                if batch_i >= BATCH_SIZE:
                     yield_y = np.array(batch_y)
                     yield np.array(batch_x), {
                                               "n": yield_y[:, :len(self.note_to_one_hot)],

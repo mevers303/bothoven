@@ -10,7 +10,7 @@ import shutil
 import time
 
 from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
-from bothoven_globals import N_EPOCHS
+from bothoven_globals import N_EPOCHS, BATCH_SIZE
 from functions.pickle_workaround import pickle_load
 
 
@@ -24,7 +24,7 @@ lr = 6.66e-5
 decay = 0
 
 lib_name = "bach_short_m21"
-model_name = lib_name + f"_5_layer_u{units}_dr{dropout}_lr{lr:.2e}_d{decay}"
+model_name = lib_name + f"_5_layer_u{units}_dr{dropout}_lr{lr:.2e}_d{decay}_bs{BATCH_SIZE}"
 
 
 note_one_hot_len = 0
@@ -100,8 +100,8 @@ def fit_model(model, dataset, start_epoch):
 
     logfile = os.path.join("models/", model.name, "log.txt")
 
-    steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // dataset.BATCH_SIZE # it's - 1 because the very last step is a prediction only
-    validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // dataset.BATCH_SIZE
+    steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
+    validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // BATCH_SIZE
     model_save_filepath = os.path.join("models/", model_name, "epoch_{epoch:03d}_{val_loss:.4f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss'), keras.callbacks.TensorBoard(log_dir=f"tensorboard/{model.name}")]
 
