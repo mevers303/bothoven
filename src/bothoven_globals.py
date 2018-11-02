@@ -16,24 +16,6 @@ MINIMUM_NOTE_LENGTH = 16  # 64th notes
 MINIMUM_NOTE_LENGTH_TRIPLETS = 8 * 3  # 64th note triplets
 
 
-# create a list of all the possible not durations to use to bin message durations into later on
-this_bin = MAXIMUM_NOTE_LENGTH
-DURATION_BINS = [this_bin]
-
-while this_bin > 4 / MINIMUM_NOTE_LENGTH:
-    # divide by half to get the next smallest note
-    this_bin = int(this_bin / 2)
-    # and triplets
-    this_bin_triplet = int(this_bin / 3)
-    # add the dotted note duration first cause it's bigger
-    DURATION_BINS.append(this_bin * 1.5)
-    # DURATION_BINS.append(this_bin_triplet * 1.5)  # unnecessary because a dotted triplet is equal to a regular duplet
-    DURATION_BINS.append(this_bin)
-    DURATION_BINS.append(this_bin_triplet)
-
-del this_bin  # get up on outta here
-
-
 # the number of steps in the model
 NUM_STEPS = 64
 # number of epochs to train for
@@ -61,36 +43,6 @@ KEY_SIGNATURES = [[ 0,  2,  4,  5 , 7,  9, 11],  # C
                   [10,  0,  2,  3,  5,  7,  9],  # Bb
                   [11,  1,  3,  4,  6,  8, 10]]  # B
 
-
-
-####################### FUNCTIONS #######################
-def get_note_duration_bin(duration):
-    """
-    Rounds the duration to the closest value in DURATION_BINS
-    :param duration: This note's duration
-    :return: A new duration in ticks
-    """
-
-    smallest_difference = MAXIMUM_NOTE_LENGTH
-    best_match_i = 0
-
-    for i in range(len(DURATION_BINS)):
-
-        difference = abs(duration - DURATION_BINS[i])
-
-        if not difference:
-            # they're equal
-            return i
-        elif difference < smallest_difference:
-            # find the whichever bin it's closest to
-            smallest_difference = difference
-            best_match_i = i
-        elif difference > smallest_difference:
-            # we passed our bin
-            return best_match_i
-
-    # this should never execute but just for sanity's sake
-    return best_match_i
 
 
 def dump_tracks(midi_file):

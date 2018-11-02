@@ -3,11 +3,11 @@
 # model_scratchpad.py
 # RNN classifier model
 
+import argparse
 import keras
 import numpy as np
 import os
 import shutil
-import time
 
 from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
 from bothoven_globals import N_EPOCHS, BATCH_SIZE
@@ -18,32 +18,22 @@ from functions.pickle_workaround import pickle_load
 np.random.seed(777)
 
 
-units = 256
-dropout = .333
-lr = 6.66e-5
-decay = 0
-
-lib_name = "bach_short_m21"
-model_name = lib_name + f"_5_layer_u{units}_dr{dropout}_lr{lr:.2e}_d{decay}_bs{BATCH_SIZE}"
 
 
-note_one_hot_len = 0
-duration_one_hot_len = 0
-offset_one_hot_len = 0
 
 
-def create_model(dataset):
+def create_model(dataset, model_name, nodes, dropout, lr, decay):
 
     inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES))
-    x = keras.layers.LSTM(units=units, return_sequences=True)(inputs)
+    x = keras.layers.LSTM(units=nodes, return_sequences=True)(inputs)
     x = keras.layers.Dropout(dropout)(x)
-    x = keras.layers.LSTM(units=units, return_sequences=True)(x)
+    x = keras.layers.LSTM(units=nodes, return_sequences=True)(x)
     x = keras.layers.Dropout(dropout)(x)
-    x = keras.layers.LSTM(units=units, return_sequences=True)(x)
+    x = keras.layers.LSTM(units=nodes, return_sequences=True)(x)
     x = keras.layers.Dropout(dropout)(x)
-    x = keras.layers.LSTM(units=units, return_sequences=True)(x)
+    x = keras.layers.LSTM(units=nodes, return_sequences=True)(x)
     x = keras.layers.Dropout(dropout)(x)
-    x = keras.layers.LSTM(units=units)(x)
+    x = keras.layers.LSTM(units=nodes)(x)
     x = keras.layers.Dropout(dropout)(x)
 
     note_output = keras.layers.Dense(name="n", units=len(dataset.note_to_one_hot), activation='softmax')(x)
@@ -96,7 +86,7 @@ def save_model_structure(model):
         json_file.write(model.to_json())
 
 
-def fit_model(model, dataset, start_epoch):
+def fit_model(model, model_name, dataset, start_epoch):
 
     logfile = os.path.join("models/", model.name, "log.txt")
 
@@ -119,8 +109,31 @@ def fit_model(model, dataset, start_epoch):
 
 
 
+def get_args():
+
+    parser = argparse.ArgumentParser(description="Converts a directory (and subdirectories) of MIDI files using the plugins.")
+    parser.add_argument("library", help="The name of the library to load.", type=str)
+    parser.add_argument("--nodes", help="The number of nodes in each hidden LSTM layer (int).", type=int)
+    parser.add_argument("--dropout", help="The dropout value (float).", type=float)
+    parser.add_argument("--lr", help="The learning rate (float)", type=float)
+    parser.add_argument("--decay", help="The learning rate decay (float).", type=float)
+    args = parser.parse_args()
+
+    lib_name = args.library
+    units = args.nodes if args.nodes else 512
+    dropout = args.dropout if args.dropout else .333
+    lr = args.lr if args.lr else 6.66e-5
+    decay = args.decay if args.decay else 0
+
+    model_name = lib_name + f"_5_layer_units{units}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{BATCH_SIZE}"
+
+    return lib_name, model_name, units, dropout, lr, decay
+
+
 
 def main():
+
+    lib_name, model_name, nodes, dropout, lr, decay = get_args()
 
     if not os.path.exists(f"models/{model_name}"):
         os.makedirs(f"models/{model_name}")
@@ -132,11 +145,11 @@ def main():
     model, start_epoch = load_model(model_name)
     if not model:
         print("Creating model...")
-        model = create_model(dataset)
+        model = create_model(dataset, model_name, nodes, dropout, lr, decay)
 
     print(model.summary())
     print("Fitting model...")
-    fit_model(model, dataset, start_epoch)
+    fit_model(model, model_name, dataset, start_epoch)
 
 
 if __name__ == "__main__":
