@@ -11,6 +11,7 @@ class Music21ArrayBuilder:
 
         self.filename = filename
         self.buf = []
+        self.last_beat = 99999
 
 
     def mid_to_array(self):
@@ -36,6 +37,9 @@ class Music21ArrayBuilder:
 
     def parse_msg(self, msg):
 
+        if msg.beat < self.last_beat:
+            self.buf.append([-4, -4, -4]) # a measure_start
+
         # find the one-hot note
         if msg.isNote:
             self.buf.append([msg.pitch.midi, msg.quarterLength, msg.beat])
@@ -48,3 +52,5 @@ class Music21ArrayBuilder:
             self.buf.append([-3, -3, -3])  # chord_end one-hot
         else:
             raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
+
+        self.last_beat = msg.beat
