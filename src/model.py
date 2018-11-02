@@ -10,7 +10,7 @@ import os
 import shutil
 
 from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
-from bothoven_globals import N_EPOCHS, BATCH_SIZE
+from bothoven_globals import N_EPOCHS, BATCH_SIZE, NUM_STEPS
 from functions.pickle_workaround import pickle_load
 
 
@@ -24,7 +24,7 @@ np.random.seed(777)
 
 def create_model(dataset, model_name, nodes, dropout, lr, decay):
 
-    inputs = keras.layers.Input(shape=(dataset.NUM_STEPS, dataset.NUM_FEATURES))
+    inputs = keras.layers.Input(shape=(NUM_STEPS, dataset.NUM_FEATURES))
     x = keras.layers.LSTM(units=nodes, return_sequences=True)(inputs)
     x = keras.layers.Dropout(dropout)(x)
     x = keras.layers.LSTM(units=nodes, return_sequences=True)(x)

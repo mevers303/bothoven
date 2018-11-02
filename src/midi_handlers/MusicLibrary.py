@@ -8,7 +8,7 @@ import numpy as np
 
 from functions.file_functions import get_filenames
 import bothoven_globals
-from bothoven_globals import BATCH_SIZE
+from bothoven_globals import BATCH_SIZE, NUM_STEPS
 
 
 
@@ -89,10 +89,10 @@ class MusicLibraryFlat(MusicLibrary):
 
         i = 0
 
-        while i < self.buf.shape[0] - self.NUM_STEPS - 1:  # gotta leave room for the target at the end
+        while i < self.buf.shape[0] - NUM_STEPS - 1:  # gotta leave room for the target at the end
 
-            x = self.buf[i:i + self.NUM_STEPS].toarray()
-            y = self.buf[i + self.NUM_STEPS].toarray()[0]
+            x = self.buf[i:i + NUM_STEPS].toarray()
+            y = self.buf[i + NUM_STEPS].toarray()[0]
 
             i += 1
 
