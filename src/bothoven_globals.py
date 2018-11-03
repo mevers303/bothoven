@@ -19,7 +19,7 @@ MINIMUM_NOTE_LENGTH_TRIPLETS = 8 * 3  # 64th note triplets
 # the number of steps in the model
 NUM_STEPS = 64
 # number of epochs to train for
-N_EPOCHS = 25
+N_EPOCHS = 50
 # the batch size for training
 BATCH_SIZE = 64
 
