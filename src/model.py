@@ -10,7 +10,7 @@ import os
 import shutil
 
 from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
-from bothoven_globals import N_EPOCHS, BATCH_SIZE, NUM_STEPS
+from bothoven_globals import BATCH_SIZE, NUM_STEPS
 from functions.pickle_workaround import pickle_load
 
 
@@ -86,7 +86,7 @@ def save_model_structure(model):
         json_file.write(model.to_json())
 
 
-def fit_model(model, model_name, dataset, start_epoch):
+def fit_model(model, model_name, dataset, epochs, start_epoch):
 
     logfile = os.path.join("models/", model.name, "log.txt")
 
@@ -95,7 +95,7 @@ def fit_model(model, model_name, dataset, start_epoch):
     model_save_filepath = os.path.join("models/", model_name, "epoch_{epoch:03d}_{val_loss:.4f}.hdf5")
     callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss'), keras.callbacks.TensorBoard(log_dir=f"tensorboard/{model.name}")]
 
-    history = model.fit_generator(dataset.train_lib.next_batch(), steps_per_epoch=steps_per_epoch, epochs=N_EPOCHS,
+    history = model.fit_generator(dataset.train_lib.next_batch(), steps_per_epoch=steps_per_epoch, epochs=epochs,
                                    callbacks=callbacks, validation_data=dataset.test_lib.next_batch(),
                                    validation_steps=validation_steps_per_epoch, initial_epoch=start_epoch)
 
@@ -117,6 +117,7 @@ def get_args():
     parser.add_argument("--dropout", help="The dropout value (float).", type=float)
     parser.add_argument("--lr", help="The learning rate (float)", type=float)
     parser.add_argument("--decay", help="The learning rate decay (float).", type=float)
+    parser.add_argument("--epochs", help="The number of epochs to stop at (int).", type=int)
     args = parser.parse_args()
 
     lib_name = args.library
@@ -124,16 +125,17 @@ def get_args():
     dropout = args.dropout if args.dropout else .333
     lr = args.lr if args.lr else 6.66e-5
     decay = args.decay if args.decay else 0
+    epochs = args.epochs if args.epochs else 25
 
     model_name = lib_name + f"_5_layer_units{units}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{BATCH_SIZE}"
 
-    return lib_name, model_name, units, dropout, lr, decay
+    return lib_name, model_name, units, dropout, lr, decay, epochs
 
 
 
 def main():
 
-    lib_name, model_name, nodes, dropout, lr, decay = get_args()
+    lib_name, model_name, nodes, dropout, lr, decay, epochs = get_args()
 
     if not os.path.exists(f"models/{model_name}"):
         os.makedirs(f"models/{model_name}")
@@ -149,7 +151,7 @@ def main():
 
     print(model.summary())
     print("Fitting model...")
-    fit_model(model, model_name, dataset, start_epoch)
+    fit_model(model, model_name, dataset, epochs, start_epoch)
 
 
 if __name__ == "__main__":
