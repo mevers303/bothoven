@@ -10,6 +10,7 @@ from functions.pickle_workaround import pickle_dump
 from bothoven_globals import BATCH_SIZE
 
 from midi_handlers.MusicLibrary import MusicLibrary, MusicLibraryFlat, MusicLibrarySplit
+import functions.s3 as s3
 
 
 class Music21Library(MusicLibraryFlat):
@@ -197,7 +198,9 @@ def main():
     # lib = Music21LibrarySplit(filenames=filenames)
 
     print("Pickling...")
-    pickle_dump(lib, f"midi/pickles/{lib_name}_m21.pkl")
+    path = f"midi/pickles/{lib_name}_m21.pkl"
+    pickle_dump(lib, path)
+    s3.upload_file(path)
     print("Done!")
 
 

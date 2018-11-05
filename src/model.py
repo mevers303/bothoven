@@ -155,7 +155,10 @@ def main():
         os.makedirs(f"models/{model_name}")
 
     print("Loading dataset...")
-    dataset = pickle_load(f"midi/pickles/{lib_name}.pkl")
+    path = f"midi/pickles/{lib_name}.pkl"
+    if not os.path.exists(path):
+        s3.download_file(path)
+    dataset = pickle_load(path)
 
     model, start_epoch = load_model(model_name)
     if not model:
