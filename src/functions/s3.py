@@ -10,6 +10,17 @@ _bucket_name = "bothoven"
 
 
 
+def upload_file_to_s3(file, bucket=None):
+
+    if not bucket:
+        conn = boto.connect_s3(_keyfile["key"], _keyfile["secret_key"])
+        bucket = conn.get_bucket(_bucket_name)
+
+    print(f"Uploading '{file}' to S3 bucket '{bucket.name}'...")
+    key = s3.key.Key(bucket, file)
+    key.set_contents_from_filename(file)
+
+
 def sync_s3(dir, overwrite=False):
 
     conn = boto.connect_s3(_keyfile["key"], _keyfile["secret_key"])
@@ -27,9 +38,7 @@ def sync_s3(dir, overwrite=False):
 def upload_files_to_s3(bucket, files):
 
     for file in files:
-        print(f"Uploading '{file}' to S3 bucket '{bucket.name}'...")
-        key = s3.key.Key(bucket, file)
-        key.set_contents_from_filename(file)
+        upload_file_to_s3(file, bucket)
 
 
 def upload_latest_file(dir):
@@ -39,9 +48,7 @@ def upload_latest_file(dir):
 
     files = get_filenames(dir)
     latest_file = max(files, key=os.path.getctime)
-    key = s3.key.Key(bucket, name=latest_file)
-    print(f"Uploading '{latest_file}' to S3 bucket '{bucket.name}'...")
-    key.set_contents_from_filename(latest_file)
+    upload_file_to_s3(latest_file, bucket)
 
 
 
