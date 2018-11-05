@@ -7,3 +7,4 @@ models/
 src/functions/__pycache__/
 output/
 tensorboard/
+s3_key.json
