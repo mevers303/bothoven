@@ -26,13 +26,13 @@ class S3Callback(keras.callbacks.Callback):
         self.model_name = model_name
     
     def on_epoch_end(self, epoch, logs=None):
-        s3.upload_file_to_s3(f"models/{self.model_name}/log.csv")
+        s3.upload_file(f"models/{self.model_name}/log.csv")
         s3.upload_latest_file(f"models/{self.model_name}")
         s3.upload_latest_file(f"tensorboard/{self.model_name}")
 
     def on_train_end(self, logs=None):
-        s3.sync_s3(f"models/{self.model_name}")
-        s3.sync_s3(f"tensorboard/{self.model_name}")
+        s3.up_sync_s3(f"models/{self.model_name}")
+        s3.up_sync_s3(f"tensorboard/{self.model_name}")
 
 
 
@@ -61,12 +61,12 @@ def create_model(dataset, model_name, layers, nodes, dropout, lr, decay):
     path = f"models/{model_name}/model.json"
     with open(path, "w") as f:
         f.write(model.to_json())
-    s3.upload_file_to_s3(path)
+    s3.upload_file(path)
 
     path = f"models/{model_name}/summary.txt"
     with open(path, "w") as f:
         model.summary(print_fn=lambda line: f.write(line + "\n"))
-    s3.upload_file_to_s3(path)
+    s3.upload_file(path)
 
     # delete the old tensorboard log file
     path = f"tensorboard/{model_name}"
@@ -83,7 +83,10 @@ def load_model(model_name):
 
     # download any new files from S3
     if s3.down_sync_s3(f"models/{model_name}"):
-        s3.download_file(f"models/{model_name}/log.csv")
+        try:
+            s3.download_file(f"models/{model_name}/log.csv")
+        except Exception:
+            pass
     s3.down_sync_s3(f"tensorboard/{model_name}")
 
     # find all the previous models
