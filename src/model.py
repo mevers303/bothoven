@@ -25,18 +25,14 @@ class S3Callback(keras.callbacks.Callback):
         super().__init__()
         self.model_name = model_name
     
-    
     def on_epoch_end(self, epoch, logs=None):
-        
+        s3.upload_file_to_s3(f"models/{self.model_name}/log.csv")
         s3.upload_latest_file(f"models/{self.model_name}")
         s3.upload_latest_file(f"tensorboard/{self.model_name}")
 
-
     def on_train_end(self, logs=None):
-
         s3.sync_s3(f"models/{self.model_name}")
         s3.sync_s3(f"tensorboard/{self.model_name}")
-
 
 
 
@@ -62,34 +58,40 @@ def create_model(dataset, model_name, layers, nodes, dropout, lr, decay):
     metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
     model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
-    with open(f"models/{model_name}/model.json", "w") as f:
+    path = f"models/{model_name}/model.json"
+    with open(path, "w") as f:
         f.write(model.to_json())
+    s3.upload_file_to_s3(path)
+
+    path = f"models/{model_name}/summary.txt"
+    with open(path, "w") as f:
+        model.summary(print_fn=lambda line: f.write(line + "\n"))
+    s3.upload_file_to_s3(path)
 
     # delete the old tensorboard log file
-    if os.path.exists(f"tensorboard/{model_name}"):
-        shutil.rmtree(f"tensorboard/{model_name}")
+    path = f"tensorboard/{model_name}"
+    if os.path.exists(path):
+        shutil.rmtree(path)
 
     return model
 
 
 def load_model(model_name):
 
-    best_epoch = 0
-    best_file = ""
+    last_epoch = 0
+    last_file = ""
 
     # find all the previous models
     for file in os.listdir(f"models/{model_name}"):
-
         if file.endswith(".hdf5"):
-
             epoch = int(file.split("_")[1])
-            if epoch > best_epoch:
-                best_epoch = epoch
-                best_file = file
+            if epoch > last_epoch:
+                last_epoch = epoch
+                last_file = file
 
-    if best_epoch:
-        print(f"Loading model from disk (epoch {best_epoch})...")
-        return keras.models.load_model(f"models/{model_name}/{best_file}"), best_epoch
+    if last_epoch:
+        print(f"Loading model from disk (epoch {last_epoch})...")
+        return keras.models.load_model(f"models/{model_name}/{last_file}"), last_epoch
     else:
         return None, 0
 
@@ -101,10 +103,10 @@ def fit_model(model, model_name, dataset, epochs, start_epoch):
     steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
     validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // BATCH_SIZE
     model_save_filepath = os.path.join(f"models/{model_name}", "epoch_{epoch:03d}_{val_loss:.4f}.hdf5")
-    callbacks = [keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss'),
-                 keras.callbacks.TensorBoard(log_dir=f"tensorboard/{model_name}", histogram_freq=1, write_graph=True,
-                                             write_grads=True, write_images=True),
-                 keras.callbacks.CSVLogger(logfile, append=True),
+    callbacks = [keras.callbacks.CSVLogger(logfile, append=True),
+                 keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss'),
+                 keras.callbacks.TensorBoard(log_dir=f"tensorboard/{model_name}", write_graph=True, write_grads=True,
+                                             write_images=True),
                  S3Callback(model_name)]
 
     model.fit_generator(dataset.train_lib.next_batch(), steps_per_epoch=steps_per_epoch, epochs=epochs,
@@ -155,11 +157,25 @@ def main():
         print("Creating model...")
         model = create_model(dataset, model_name, layers, nodes, dropout, lr, decay)
 
-    print(model.summary())
+    print()
+    print("***** DATASET")
+    print("Features:".ljust(15), dataset.NUM_FEATURES)
+    print("Training set:".ljust(15), len(dataset.train_indices))
+    print("Test set:".ljust(15), len(dataset.test_indices))
+    print()
+    print("***** MODEL")
+    print("Layers:".ljust(15), layers)
+    print("Nodes:".ljust(15), nodes)
+    print("Dropout:".ljust(15), dropout)
+    print("Learning Rate:".ljust(15), lr)
+    print("Decay:".ljust(15), decay)
+    print("Epochs:".ljust(15), epochs)
+    print("Parameters:".ljust(15), model.count_params())
+    print()
+
     print("Fitting model...")
     fit_model(model, model_name, dataset, epochs, start_epoch)
 
 
 if __name__ == "__main__":
-
     main()
