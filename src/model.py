@@ -81,6 +81,11 @@ def load_model(model_name):
     last_epoch = 0
     last_file = ""
 
+    # download any new files from S3
+    if s3.down_sync_s3(f"models/{model_name}"):
+        s3.download_file(f"models/{model_name}/log.csv")
+    s3.down_sync_s3(f"tensorboard/{model_name}")
+
     # find all the previous models
     for file in os.listdir(f"models/{model_name}"):
         if file.endswith(".hdf5"):
