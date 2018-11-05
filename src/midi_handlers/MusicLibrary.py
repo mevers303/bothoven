@@ -35,7 +35,7 @@ class MusicLibrary(ABC):
 
     def find_files(self):
 
-        self.filenames = np.array(get_filenames(self.base_dir))
+        self.filenames = np.array(get_filenames(self.base_dir, [".mid", ".midi", ".smf"]))
         print("Found", self.filenames.size, "files in", self.base_dir + "...")
 
 

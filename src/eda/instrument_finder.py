@@ -10,7 +10,7 @@ out_dir = "/media/mark/Data/Documents/python/bothoven/midi/monophonic"
 good_programs = set(range(56, 80))
 
 
-filenames = get_filenames(in_dir)
+filenames = get_filenames(in_dir, [".mid", ".midi", ".smf"])
 total = len(filenames)
 done = 0
 
