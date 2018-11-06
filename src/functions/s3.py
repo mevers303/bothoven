@@ -17,7 +17,7 @@ def get_bucket():
 
 def upload_file(file, bucket=None):
 
-    print(f"Uploading '{file}' to S3...")
+    print(f" -> Uploading '{file}' to S3...")
     if not bucket:
         bucket = get_bucket()
     key = s3.key.Key(bucket, file)
@@ -71,7 +71,7 @@ def down_sync_s3(dir, overwrite=False):
 
 def download_file(file, bucket=None):
 
-    print(f"Downloading '{file}' from S3...")
+    print(f" -> Downloading '{file}' from S3...")
     if not bucket:
         bucket = get_bucket()
 
