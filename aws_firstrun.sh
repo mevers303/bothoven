@@ -2,7 +2,7 @@
 
 sudo apt update
 sudo apt dist-upgrade -y
-sudo apt install htop screen -y
+sudo apt install screen -y
 
 source activate tensorflow_p36
 conda upgrade --all -y
