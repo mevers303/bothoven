@@ -130,7 +130,7 @@ def load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu=F
     model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
     if use_tpu:
-        print("Converting to TPU model...")
+        print(" -> converting to TPU model...")
         model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=tf.contrib.tpu.TPUDistributionStrategy(
             tf.contrib.cluster_resolver.TPUClusterResolver('grpc://' + os.environ['COLAB_TPU_ADDR'])))
 
@@ -173,6 +173,8 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, use_tpu=
     print("Loading dataset...")
     path = f"midi/pickles/{lib_name}.pkl"
     if not os.path.exists(path):
+        if not os.path.exists("midi/pickles"):
+            os.makedirs("midi/pickles")
         s3.download_file(path)
     dataset = pickle_load(path)
 
