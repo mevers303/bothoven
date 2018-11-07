@@ -4,18 +4,22 @@
 # RNN classifier model
 
 import argparse
-import keras
 import numpy as np
 import os
 import shutil
+import tensorflow as tf
+import tensorflow.keras as keras
 
 from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
 from bothoven_globals import BATCH_SIZE, NUM_STEPS
 from functions.pickle_workaround import pickle_load
+from functions.file_functions import get_filenames
 import functions.s3 as s3
 
 # fix random seed for reproducibility
 np.random.seed(777)
+# tf.logging.set_verbosity(tf.logging.ERROR)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(tf.logging.ERROR)
 
 
 
@@ -26,9 +30,9 @@ class S3Callback(keras.callbacks.Callback):
         self.model_name = model_name
     
     def on_epoch_end(self, epoch, logs=None):
-        s3.upload_file(f"models/{self.model_name}/log.csv")
-        s3.upload_latest_file(f"models/{self.model_name}")
-        s3.upload_latest_file(f"tensorboard/{self.model_name}")
+        s3.upload_file(f"models/{self.model_name}/log.csv", verbose=False)
+        s3.upload_latest_file(f"models/{self.model_name}", verbose=False)
+        s3.upload_latest_file(f"tensorboard/{self.model_name}", verbose=False)
 
     def on_train_end(self, logs=None):
         s3.up_sync_s3(f"models/{self.model_name}")
@@ -36,7 +40,7 @@ class S3Callback(keras.callbacks.Callback):
 
 
 
-def create_model(dataset, model_name, layers, nodes, dropout, lr, decay):
+def create_model(dataset, model_name, layers, nodes, dropout):
 
     if layers < 1:
         raise ValueError("Number of layers must be greater than zero.")
@@ -53,12 +57,8 @@ def create_model(dataset, model_name, layers, nodes, dropout, lr, decay):
     offset_output = keras.layers.Dense(name="o", units=len(dataset.offset_to_one_hot), activation='softmax')(x)
 
     model = keras.models.Model(name=model_name, inputs=inputs, outputs=[note_output, duration_output, offset_output])
-    optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
-    losses = {"n": "categorical_crossentropy", "d": "categorical_crossentropy", "o": "categorical_crossentropy"}
-    metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
-    model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
-    path = f"models/{model_name}/model.json"
+    path = f"models/{model_name}/{model_name}.json"
     with open(path, "w") as f:
         f.write(model.to_json())
     s3.upload_file(path)
@@ -76,7 +76,7 @@ def create_model(dataset, model_name, layers, nodes, dropout, lr, decay):
     return model
 
 
-def load_model(model_name):
+def load_cached_model(model_name):
 
     last_epoch = 0
     last_file = ""
@@ -90,29 +90,60 @@ def load_model(model_name):
     s3.down_sync_s3(f"tensorboard/{model_name}")
 
     # find all the previous models
-    for file in os.listdir(f"models/{model_name}"):
-        if file.endswith(".hdf5"):
-            epoch = int(file.split("_")[1])
-            if epoch > last_epoch:
-                last_epoch = epoch
-                last_file = file
+    for file in get_filenames(f"models/{model_name}", [".h5"]):
+        filename = file[len(f"models/{model_name}/"):]  # remove the directory from the string
+        epoch = int(filename.split("_")[1])
+        if epoch > last_epoch:
+            last_epoch = epoch
+            last_file = file
 
     if last_epoch:
-        print(f"Loading model from disk (epoch {last_epoch})...")
-        return keras.models.load_model(f"models/{model_name}/{last_file}"), last_epoch
+        print(f" -> found cached model (epoch {last_epoch})")
+        print(" --> loading structure...")
+        with open(f"models/{model_name}/{model_name}.json", "r") as f:
+            model = keras.models.model_from_json(f.read())
+        print(" --> loading weights...")
+        model.load_weights(last_file)
+        return model, last_epoch
     else:
         return None, 0
 
 
-def fit_model(model, model_name, dataset, epochs, start_epoch):
+def load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu=False, retrain=False):
 
-    logfile = f"models/{model_name}/log.csv"
+    print("Creating model...")
+
+    if not retrain:
+        model, start_epoch = load_cached_model(model_name)
+    else:
+        model = None
+        start_epoch = 0
+
+    # we're either retraining or there was no cached model
+    if not model:
+        model = create_model(dataset, model_name, layers, nodes, dropout)
+
+    print("Compiling model...")
+    optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
+    losses = {"n": "categorical_crossentropy", "d": "categorical_crossentropy", "o": "categorical_crossentropy"}
+    metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
+    model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
+
+    if use_tpu:
+        print("Converting to TPU model...")
+        model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=tf.contrib.tpu.TPUDistributionStrategy(
+            tf.contrib.cluster_resolver.TPUClusterResolver('grpc://' + os.environ['COLAB_TPU_ADDR'])))
+
+    return model, start_epoch
+
+
+def fit_model(model, model_name, dataset, epochs, start_epoch):
 
     steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
     validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // BATCH_SIZE
-    model_save_filepath = os.path.join(f"models/{model_name}", "epoch_{epoch:03d}_{val_loss:.4f}.hdf5")
-    callbacks = [keras.callbacks.CSVLogger(logfile, append=True),
-                 keras.callbacks.ModelCheckpoint(model_save_filepath, monitor='val_loss'),
+    callbacks = [keras.callbacks.CSVLogger(f"models/{model_name}/log.csv", append=True),
+                 keras.callbacks.ModelCheckpoint(os.path.join(f"models/{model_name}/", "epoch_{epoch:03d}_{val_loss:.4f}.h5"),
+                                                 monitor='val_loss', save_weights_only=True),
                  keras.callbacks.TensorBoard(log_dir=f"tensorboard/{model_name}", write_graph=True, write_grads=True,
                                              write_images=True),
                  S3Callback(model_name)]
@@ -124,35 +155,17 @@ def fit_model(model, model_name, dataset, epochs, start_epoch):
     return model
 
 
-def get_args():
+def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, use_tpu=False, retrain=False):
 
-    parser = argparse.ArgumentParser(description="Converts a directory (and subdirectories) of MIDI files using the plugins.")
-    parser.add_argument("library", help="The name of the library to load (str).", type=str)
-    parser.add_argument("--layers", help="The number of hidden LSTM layers (int).", type=int)
-    parser.add_argument("--nodes", help="The number of nodes in each hidden LSTM layer (int).", type=int)
-    parser.add_argument("--dropout", help="The dropout value (float).", type=float)
-    parser.add_argument("--lr", help="The learning rate (float)", type=float)
-    parser.add_argument("--decay", help="The learning rate decay (float).", type=float)
-    parser.add_argument("--epochs", help="The number of epochs to stop at (int).", type=int)
-    args = parser.parse_args()
+    print("THIS IS BOTHOVEN!")
 
-    lib_name = args.library
-    layers = args.layers if args.layers else 5
-    units = args.nodes if args.nodes else 512
-    dropout = args.dropout if args.dropout else .333
-    lr = args.lr if args.lr else 6.66e-5
-    decay = args.decay if args.decay else 0
-    epochs = args.epochs if args.epochs else 25
+    model_name = lib_name + f"_layers{layers}_nodes{nodes}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{BATCH_SIZE}"
 
-    model_name = lib_name + f"_layers{layers}_units{units}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{BATCH_SIZE}"
-
-    return lib_name, model_name, layers, units, dropout, lr, decay, epochs
-
-
-
-def main():
-
-    lib_name, model_name, layers, nodes, dropout, lr, decay, epochs = get_args()
+    # if we're retraining, delete the cached models
+    if retrain:
+        if os.path.exists(f"models/{model_name}"):
+            if os.path.exists(f"models/{model_name}"):
+                shutil.rmtree(f"models/{model_name}")
 
     if not os.path.exists(f"models/{model_name}"):
         os.makedirs(f"models/{model_name}")
@@ -163,18 +176,15 @@ def main():
         s3.download_file(path)
     dataset = pickle_load(path)
 
-    model, start_epoch = load_model(model_name)
-    if not model:
-        print("Creating model...")
-        model = create_model(dataset, model_name, layers, nodes, dropout, lr, decay)
+    model, start_epoch = load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu, retrain)
 
-    print()
-    print("***** DATASET")
+    print("Fitting model...")
+    print("***** DATASET *****")
     print("Features:".ljust(15), dataset.NUM_FEATURES)
     print("Training set:".ljust(15), len(dataset.train_indices))
     print("Test set:".ljust(15), len(dataset.test_indices))
     print()
-    print("***** MODEL")
+    print("*****  MODEL  *****")
     print("Layers:".ljust(15), layers)
     print("Nodes:".ljust(15), nodes)
     print("Dropout:".ljust(15), dropout)
@@ -182,11 +192,34 @@ def main():
     print("Decay:".ljust(15), decay)
     print("Epochs:".ljust(15), epochs)
     print("Parameters:".ljust(15), model.count_params())
-    print()
 
-    print("Fitting model...")
     fit_model(model, model_name, dataset, epochs, start_epoch)
 
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description="Converts a directory (and subdirectories) of MIDI files using the plugins.")
+    parser.add_argument("library", help="The name of the library to load (str).", type=str)
+    parser.add_argument("--layers", help="The number of hidden LSTM layers (int).", type=int)
+    parser.add_argument("--nodes", help="The number of nodes in each hidden LSTM layer (int).", type=int)
+    parser.add_argument("--dropout", help="The dropout value (float).", type=float)
+    parser.add_argument("--lr", help="The learning rate (float)", type=float)
+    parser.add_argument("--decay", help="The learning rate decay (float).", type=float)
+    parser.add_argument("--epochs", help="The number of epochs to stop at (int).", type=int)
+    parser.add_argument("--retrain", help="Re-train the model?  Will start at epoch 0.", action="store_true")
+    args = parser.parse_args()
+
+    lib_name = args.library
+    layers = args.layers if args.layers else 5
+    nodes = args.nodes if args.nodes else 512
+    dropout = args.dropout if args.dropout else .333
+    lr = args.lr if args.lr else 6.66e-5
+    decay = args.decay if args.decay else 0
+    epochs = args.epochs if args.epochs else 25
+    retrain = True if args.retrain else False
+
+    load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, retrain=retrain)
 
 if __name__ == "__main__":
     main()
