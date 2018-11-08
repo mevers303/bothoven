@@ -112,6 +112,7 @@ def load_cached_model(model_name):
 def load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu=False, retrain=False):
 
     print("Creating model...")
+    keras.backend.clear_session()
 
     if not retrain:
         model, start_epoch = load_cached_model(model_name)
