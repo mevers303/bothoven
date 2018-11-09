@@ -160,6 +160,7 @@ def fit_model(model, model_name, dataset, epochs, start_epoch):
 def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, use_tpu=False, retrain=False):
 
     print("THIS IS BOTHOVEN!")
+    keras.backend.clear_session()
 
     model_name = lib_name + f"_layers{layers}_nodes{nodes}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{BATCH_SIZE}"
 
