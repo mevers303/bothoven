@@ -7,7 +7,6 @@ import numpy as np
 import scipy.sparse as sps
 from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 from functions.pickle_workaround import pickle_dump
-from bothoven_globals import BATCH_SIZE
 
 from midi_handlers.MusicLibrary import MusicLibrary, MusicLibraryFlat, MusicLibrarySplit
 import functions.s3 as s3
@@ -44,9 +43,9 @@ class Music21Library(MusicLibraryFlat):
         self.note_to_one_hot, self.one_hot_to_note = self.convert_to_one_hot(notes)
         self.duration_to_one_hot, self.one_hot_to_duration = self.convert_to_one_hot(durations)
         self.offset_to_one_hot, self.one_hot_to_offset = self.convert_to_one_hot(offsets)
-        self.NUM_FEATURES = len(self.note_to_one_hot) + len(self.duration_to_one_hot) + len(self.offset_to_one_hot)
+        self.num_features = len(self.note_to_one_hot) + len(self.duration_to_one_hot) + len(self.offset_to_one_hot)
 
-        print(f"Found {temp_buf.shape[0]} rows with {self.NUM_FEATURES} features!")
+        print(f"Found {temp_buf.shape[0]} rows with {self.num_features} features!")
 
 
     @staticmethod
@@ -73,7 +72,7 @@ class Music21LibraryFlat(Music21Library):
         self.one_hot_to_duration = one_hot_to_duration
         self.offset_to_one_hot = offset_to_one_hot
         self.one_hot_to_offset = one_hot_to_offset
-        self.NUM_FEATURES = num_features
+        self.num_features = num_features
 
         if autoload:
             self.load_files()
@@ -96,7 +95,7 @@ class Music21LibraryFlat(Music21Library):
             [self.offset_to_one_hot[x] + len(self.note_to_one_hot) + len(self.duration_to_one_hot) for x in offsets]
         data = [1 for _ in range(temp_buf.shape[0] * 3)]
 
-        self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.NUM_FEATURES), dtype=np.byte)
+        self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.num_features), dtype=np.byte)
 
 
     def next_batch(self):
@@ -109,7 +108,7 @@ class Music21LibraryFlat(Music21Library):
 
             for x, y in self.step_through():
 
-                if batch_i >= BATCH_SIZE:
+                if batch_i >= self.batch_size:
                     yield_y = np.array(batch_y)
                     yield np.array(batch_x), {
                                               "n": yield_y[:, :len(self.note_to_one_hot)],
@@ -167,7 +166,7 @@ class Music21LibrarySplit(Music21Library):
                                             one_hot_to_duration=self.one_hot_to_duration,
                                             offset_to_one_hot=self.offset_to_one_hot,
                                             one_hot_to_offset=self.one_hot_to_offset,
-                                            num_features=self.NUM_FEATURES)
+                                            num_features=self.num_features)
         self.train_lib.buf = [self.buf[x] for x in self.train_indices]
         self.train_lib.explode_buf()
 
@@ -179,7 +178,7 @@ class Music21LibrarySplit(Music21Library):
                                            one_hot_to_duration=self.one_hot_to_duration,
                                            offset_to_one_hot=self.offset_to_one_hot,
                                            one_hot_to_offset=self.one_hot_to_offset,
-                                           num_features=self.NUM_FEATURES)
+                                           num_features=self.num_features)
         self.test_lib.buf = [self.buf[x] for x in self.test_indices]
         self.test_lib.explode_buf()
 
@@ -190,7 +189,7 @@ def main():
 
     import os
 
-    lib_name = "bach_short"
+    lib_name = "chopin_2hand"
 
     lib = Music21LibrarySplit(os.path.join("midi", lib_name))
     # from music21.corpus import getComposer

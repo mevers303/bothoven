@@ -10,8 +10,8 @@ import shutil
 import tensorflow as tf
 import tensorflow.keras as keras
 
+from bothoven_globals import NUM_STEPS
 from midi_handlers.Music21Library import Music21LibrarySplit, Music21LibraryFlat
-from bothoven_globals import BATCH_SIZE, NUM_STEPS
 from functions.pickle_workaround import pickle_load
 from functions.file_functions import get_filenames
 import functions.s3 as s3
@@ -45,7 +45,7 @@ def create_model(dataset, model_name, layers, nodes, dropout):
     if layers < 1:
         raise ValueError("Number of layers must be greater than zero.")
 
-    inputs = keras.layers.Input(shape=(NUM_STEPS, dataset.NUM_FEATURES))
+    inputs = keras.layers.Input(shape=(NUM_STEPS, dataset.num_features))
     x = keras.layers.LSTM(units=nodes, return_sequences=(layers != 1))(inputs)
     x = keras.layers.Dropout(dropout)(x)
     for i in range(1, layers):
@@ -138,10 +138,10 @@ def load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu=F
     return model, start_epoch
 
 
-def fit_model(model, model_name, dataset, epochs, start_epoch):
+def fit_model(model, model_name, dataset, epochs, start_epoch, batch_size):
 
-    steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // BATCH_SIZE # it's - 1 because the very last step is a prediction only
-    validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // BATCH_SIZE
+    steps_per_epoch = (dataset.train_lib.buf.shape[0] - 1) // batch_size # it's - 1 because the very last step is a prediction only
+    validation_steps_per_epoch = (dataset.test_lib.buf.shape[0] - 1) // batch_size
     callbacks = [keras.callbacks.CSVLogger(f"models/{model_name}/log.csv", append=True),
                  keras.callbacks.ModelCheckpoint(os.path.join(f"models/{model_name}/", "epoch_{epoch:03d}_{val_loss:.4f}.h5"),
                                                  monitor='val_loss', save_weights_only=True),
@@ -156,11 +156,11 @@ def fit_model(model, model_name, dataset, epochs, start_epoch):
     return model
 
 
-def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, use_tpu=False, retrain=False):
+def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_size, use_tpu=False, retrain=False):
 
     print("THIS IS BOTHOVEN!")
 
-    model_name = lib_name + f"_layers{layers}_nodes{nodes}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{BATCH_SIZE}"
+    model_name = lib_name + f"_layers{layers}_nodes{nodes}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
 
     # if we're retraining, delete the cached models
     if retrain:
@@ -178,12 +178,15 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, use_tpu=
             os.makedirs("midi/pickles")
         s3.download_file(path)
     dataset = pickle_load(path)
+    dataset.batch_size = batch_size
+    dataset.train_lib.batch_size = batch_size
+    dataset.test_lib.batch_size = batch_size
 
     model, start_epoch = load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu, retrain)
 
     print("Fitting model...")
     print("***** DATASET *****")
-    print("Features:".ljust(15), dataset.NUM_FEATURES)
+    print("Features:".ljust(15), dataset.num_features)
     print("Training set:".ljust(15), len(dataset.train_indices))
     print("Test set:".ljust(15), len(dataset.test_indices))
     print("*****  MODEL  *****")
@@ -195,7 +198,7 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, use_tpu=
     print("Epochs:".ljust(15), epochs)
     print("Parameters:".ljust(15), model.count_params())
 
-    fit_model(model, model_name, dataset, epochs, start_epoch)
+    fit_model(model, model_name, dataset, epochs, start_epoch, batch_size)
 
 
 
@@ -209,6 +212,7 @@ def main():
     parser.add_argument("--lr", help="The learning rate (float)", type=float)
     parser.add_argument("--decay", help="The learning rate decay (float).", type=float)
     parser.add_argument("--epochs", help="The number of epochs to stop at (int).", type=int)
+    parser.add_argument("--batch", help="The size of each batch (int).", type=int)
     parser.add_argument("--retrain", help="Re-train the model?  Will start at epoch 0.", action="store_true")
     args = parser.parse_args()
 
@@ -219,9 +223,10 @@ def main():
     lr = args.lr if args.lr else 6.66e-5
     decay = args.decay if args.decay else 0
     epochs = args.epochs if args.epochs else 25
+    batch_size = args.batch if args.batch else 64
     retrain = True if args.retrain else False
 
-    load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, retrain=retrain)
+    load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_size, retrain=retrain)
 
 if __name__ == "__main__":
     main()

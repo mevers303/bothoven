@@ -8,7 +8,7 @@ import numpy as np
 
 from functions.file_functions import get_filenames
 import bothoven_globals
-from bothoven_globals import BATCH_SIZE, NUM_STEPS
+from bothoven_globals import NUM_STEPS
 
 
 
@@ -22,7 +22,9 @@ class MusicLibrary(ABC):
         self.midi = None
 
         # how many features does this model have?
-        self.NUM_FEATURES = -1
+        self.num_features = -1
+        # batch size to use when training the model
+        self.batch_size = -1
 
         if self.filenames is None:
             self.find_files()
@@ -109,7 +111,7 @@ class MusicLibraryFlat(MusicLibrary):
 
             for x, y in self.step_through():
 
-                if i >= BATCH_SIZE:
+                if i >= self.batch_size:
                     yield np.array(batch_x), np.array(batch_y)
                     batch_x.clear()
                     batch_y.clear()
@@ -158,7 +160,3 @@ class MusicLibrarySplit(MusicLibrary, ABC):
 
     def step_through(self):
         pass
-
-
-if __name__ == "__main__":
-    main()
