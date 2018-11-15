@@ -46,11 +46,15 @@ def create_model(dataset, model_name, layers, nodes, dropout):
         raise ValueError("Number of layers must be greater than zero.")
 
     inputs = keras.layers.Input(shape=(NUM_STEPS, dataset.num_features))
-    x = keras.layers.LSTM(units=666, return_sequences=True)(inputs)
+    x = keras.layers.LSTM(units=777, return_sequences=True)(inputs)
+    x = keras.layers.Dropout(dropout)(x)
+    x = keras.layers.LSTM(units=666, return_sequences=True)(x)
     x = keras.layers.Dropout(dropout)(x)
     x = keras.layers.LSTM(units=555, return_sequences=True)(x)
     x = keras.layers.Dropout(dropout)(x)
-    x = keras.layers.LSTM(units=444)(x)
+    x = keras.layers.LSTM(units=444, return_sequences=True)(x)
+    x = keras.layers.Dropout(dropout)(x)
+    x = keras.layers.LSTM(units=333)(x)
     x = keras.layers.Dropout(dropout)(x)
 
     note_output = keras.layers.Dense(name="n", units=len(dataset.note_to_one_hot), activation='softmax')(x)
@@ -161,7 +165,7 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_si
 
     print("THIS IS BOTHOVEN!")
 
-    model_name = lib_name + f"_666555444_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
+    model_name = lib_name + f"_777666555444333_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
 
     # if we're retraining, delete the cached models
     if retrain:
