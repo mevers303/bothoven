@@ -46,11 +46,9 @@ def create_model(dataset, model_name, layers, nodes, dropout):
         raise ValueError("Number of layers must be greater than zero.")
 
     inputs = keras.layers.Input(shape=(NUM_STEPS, dataset.num_features))
-    x = keras.layers.LSTM(units=777, return_sequences=True)(inputs)
+    x = keras.layers.LSTM(units=888, return_sequences=True)(inputs)
     x = keras.layers.Dropout(dropout)(x)
     x = keras.layers.LSTM(units=666, return_sequences=True)(x)
-    x = keras.layers.Dropout(dropout)(x)
-    x = keras.layers.LSTM(units=555, return_sequences=True)(x)
     x = keras.layers.Dropout(dropout)(x)
     x = keras.layers.LSTM(units=444)(x)
     x = keras.layers.Dropout(dropout)(x)
