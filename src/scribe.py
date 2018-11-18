@@ -1,103 +1,62 @@
 import keras
 import numpy as np
 import mido
+
+from bothoven_globals import NUM_STEPS
 from functions.pickle_workaround import pickle_load
+from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
+from midi_handlers.Music21Library import Music21LibraryFlat, Music21LibrarySplit
 
-from midi_handlers.SplitOutputMidiLibrary  import SplitOutputMidiLibraryFlat
+
+lib_name = "chopin_2hand_m21"
+model_json = "models/chopin_2hand_m21_666555444_drop0.333_lr6.66e-05_decay0_batch64/chopin_2hand_m21_666555444_drop0.333_lr6.66e-05_decay0_batch64.json"
+model_h5 = "models/chopin_2hand_m21_666555444_drop0.333_lr6.66e-05_decay0_batch64/epoch_020_4.2121.h5"
+seed_file = "midi/chopin_2hand/Prelude n14 op28 ''Fear''.mid"
+num_predictions = 200
+start_i = 0
 
 
-lib_name = "bach_short_midi_split_output"
+def song_buf_to_onehot(integer_encoded_song, dataset):
 
-model = keras.models.load_model("/media/mark/Data/Documents/python/bothoven/models/bach_short_midi_split_output_4_layer_6543/epoch_100_0.4403.hdf5")
-print("Model:", model.name)
+    onehot_encoded_song = np.zeros((integer_encoded_song.shape[0], dataset.num_features), dtype=np.byte)
+
+    for i in range(integer_encoded_song.shape[0]):
+        note, duration, offset = integer_encoded_song[i]
+        onehot_encoded_song[i, dataset.note_to_one_hot[note]] = 1
+        onehot_encoded_song[i, dataset.duration_to_one_hot[duration] + len(dataset.note_to_one_hot)] = 1
+        onehot_encoded_song[i, dataset.offset_to_one_hot[offset] + len(dataset.note_to_one_hot) + len(dataset.duration_to_one_hot)] = 1
+
+    return onehot_encoded_song
+
+
+
 print("Loading dataset...")
 dataset = pickle_load(f"midi/pickles/{lib_name}.pkl")
+print(" -> Loading seed song...")
+seed = song_buf_to_onehot(Music21ArrayBuilder(seed_file).mid_to_array(), dataset)
+new_song = np.vstack([seed[start_i:start_i  + NUM_STEPS], np.zeros((num_predictions, dataset.num_features))])
+
+print("Loading model...")
+print(" -> Loading structure...")
+with open(model_json, "r") as f:
+    model = keras.models.model_from_json(f.read())
+print(" -> Loading weights...")
+model.load_weights(model_h5)
 
 
+for i in range(num_predictions):
 
-def pad_track(track):
+    p = model.predict(np.array([seed[i + start_i:i + start_i + NUM_STEPS]]))
+    p_note = np.argmax(p[0][0])
+    p_duration = np.argmax(p[1][0])
+    p_offset = np.argmax(p[2][0])
 
-    track_start = np.zeros(dataset.buf.shape[1])
-    track_start[256] = 1
-    msg_list = [track_start]
+    new_song[i + NUM_STEPS, p_note] = 1
+    new_song[i + NUM_STEPS, p_duration + p[0].shape[1]] = 1
+    new_song[i + NUM_STEPS, p_offset + p[0].shape[1] + p[1].shape[1]] = 1
 
-    for msg in track:
+    note = dataset.one_hot_to_note[p_note]
+    duration = dataset.one_hot_to_duration[p_duration]
+    offset = dataset.one_hot_to_offset[p_offset]
 
-        if not (msg.type == 'note_on' or msg.type == 'note_off') or msg.channel == 9:  # skip drum tracks
-            continue
-
-        # find the one-hot note
-        note_code = msg.note
-        if msg.type == "note_off" or not msg.velocity:
-            note_code += 128
-
-        delay_code = dataset.delay_to_one_hot[msg.time] + 258
-
-        this_step = np.zeros(dataset.buf.shape[1])
-        this_step[note_code] = 1
-        this_step[delay_code] = 1
-        msg_list.append(this_step)
-
-    if len(msg_list) == 1:
-        return None
-
-    track_end = np.zeros(dataset.buf.shape[1])
-    track_end[257] = 1
-    msg_list.append(track_end)
-
-    if len(msg_list) < dataset.NUM_STEPS:
-        difference = dataset.NUM_STEPS - len(msg_list)
-        pad = [np.zeros(dataset.buf.shape[1]) for _ in range(difference)]
-        msg_list = pad + msg_list
-
-    return np.array(msg_list)
-
-
-seed = mido.MidiFile("/home/mark/test_out/test.mid")
-track_i = 0
-
-for seed_track in seed.tracks:
-
-    new_song = pad_track(seed_track)
-    if new_song is None:
-        track_i += 1
-        continue
-
-    for i in range(100):
-
-        x = np.array([new_song[i:dataset.NUM_STEPS + i]])
-        p = model.predict(x)
-        notes = p[0][0]
-        note = np.argmax(notes)
-        top_notes = np.argsort(notes)[::-1][:10]
-        delays = p[1][0]
-        delay_i = np.argmax(delays)
-        delay = dataset.one_hot_to_delay[delay_i]
-        top_delays = [dataset.one_hot_to_delay[x] for x in np.argsort(delays)[::-1][:10]]
-
-        # print(f"note_on:  {note}" if note < 128 else f"note_off: {note - 128}", "delay:", delay)
-        # print("Top notes", top_notes)
-        # print("Top delays:", top_delays)
-        # print()
-
-        new_step = np.zeros(dataset.buf.shape[1])
-        new_step[note] = 1
-        new_step[delay_i + 258] = 1
-        new_song = np.vstack([new_song, new_step])
-
-        if note < 128:
-            seed_track.append(mido.Message("note_on", note=note, time=delay, channel=0))
-        elif note < 256:
-            seed_track.append(mido.Message("note_off", note=note - 128, time=delay, channel=0))
-
-    # new_mid = mido.MidiFile(ticks_per_beat=192)
-    # new_mid.tracks.append(seed_track)
-    # new_mid.save(f"output/output_{track_i}.mid")
-    # print(f"Saved output/output_{track_i}.mid")
-
-    seed.tracks[track_i] = seed_track
-    print("Completed track", track_i)
-    track_i += 1
-
-seed.save(f"output/the_track.mid")
-print(f"Saved output/the_track.mid")
+    print("Note:", str(note).ljust(5), "Duration:", str(duration).ljust(6), "Offset:", str(offset))
