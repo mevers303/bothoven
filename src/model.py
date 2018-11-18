@@ -40,17 +40,18 @@ class S3Callback(keras.callbacks.Callback):
 
 
 
-def create_model(dataset, model_name, layers, nodes, dropout):
+def create_model(dataset, model_name, layers, dropout):
 
-    if layers < 1:
+    if len(layers) < 1:
         raise ValueError("Number of layers must be greater than zero.")
 
     inputs = keras.layers.Input(shape=(NUM_STEPS, dataset.num_features))
-    x = keras.layers.LSTM(units=nodes, return_sequences=(layers != 1))(inputs)
-    x = keras.layers.Dropout(dropout)(x)
-    for i in range(1, layers):
-        x = keras.layers.LSTM(units=nodes, return_sequences=(i < layers - 1))(x)
+    x = inputs
+    i = 1
+    for nodes in layers:
+        x = keras.layers.LSTM(units=nodes, return_sequences=(i < len(layers)))(x)
         x = keras.layers.Dropout(dropout)(x)
+        i += 1
 
     note_output = keras.layers.Dense(name="n", units=len(dataset.note_to_one_hot), activation='softmax')(x)
     duration_output = keras.layers.Dense(name="d", units=len(dataset.duration_to_one_hot), activation='softmax')(x)
@@ -109,7 +110,7 @@ def load_cached_model(model_name):
         return None, 0
 
 
-def load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu=False, retrain=False):
+def load_model(dataset, model_name, layers, dropout, lr, decay, use_tpu=False, retrain=False):
 
     print("Creating model...")
     keras.backend.clear_session()
@@ -122,7 +123,7 @@ def load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu=F
 
     # we're either retraining or there was no cached model
     if not model:
-        model = create_model(dataset, model_name, layers, nodes, dropout)
+        model = create_model(dataset, model_name, layers, dropout)
 
     print("Compiling model...")
     optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
@@ -156,11 +157,11 @@ def fit_model(model, model_name, dataset, epochs, start_epoch, batch_size):
     return model
 
 
-def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_size, use_tpu=False, retrain=False):
+def load_and_train(lib_name, layers, dropout, lr, decay, epochs, batch_size, use_tpu=False, retrain=False):
 
     print("THIS IS BOTHOVEN!")
 
-    model_name = lib_name + f"_layers{layers}_nodes{nodes}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
+    model_name = lib_name + f"_{'-'.join([str(nodes) for nodes in layers])}_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
 
     # if we're retraining, delete the cached models
     if retrain:
@@ -182,7 +183,7 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_si
     dataset.train_lib.batch_size = batch_size
     dataset.test_lib.batch_size = batch_size
 
-    model, start_epoch = load_model(dataset, model_name, layers, nodes, dropout, lr, decay, use_tpu, retrain)
+    model, start_epoch = load_model(dataset, model_name, layers, dropout, lr, decay, use_tpu, retrain)
 
     print("Fitting model...")
     print("***** DATASET *****")
@@ -190,14 +191,14 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_si
     print("Training set:".ljust(15), len(dataset.train_indices))
     print("Test set:".ljust(15), len(dataset.test_indices))
     print("*****  MODEL  *****")
-    print("Layers:".ljust(15), layers)
-    print("Nodes:".ljust(15), nodes)
+    print("Layers:".ljust(15), " -> ".join([str(nodes) for nodes in layers]))
     print("Dropout:".ljust(15), dropout)
     print("Learning Rate:".ljust(15), lr)
     print("Decay:".ljust(15), decay)
     print("Epochs:".ljust(15), epochs)
     print("Batch size:".ljust(15), batch_size)
     print("Parameters:".ljust(15), model.count_params())
+    print()
 
     fit_model(model, model_name, dataset, epochs, start_epoch, batch_size)
 
@@ -207,8 +208,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Converts a directory (and subdirectories) of MIDI files using the plugins.")
     parser.add_argument("library", help="The name of the library to load (str).", type=str)
-    parser.add_argument("--layers", help="The number of hidden LSTM layers (int).", type=int)
-    parser.add_argument("--nodes", help="The number of nodes in each hidden LSTM layer (int).", type=int)
+    parser.add_argument("--layers", help="The structure of the hidden layer.   In the form units+units+units (str).", type=str)
     parser.add_argument("--dropout", help="The dropout value (float).", type=float)
     parser.add_argument("--lr", help="The learning rate (float)", type=float)
     parser.add_argument("--decay", help="The learning rate decay (float).", type=float)
@@ -218,8 +218,7 @@ def main():
     args = parser.parse_args()
 
     lib_name = args.library
-    layers = args.layers if args.layers else 5
-    nodes = args.nodes if args.nodes else 512
+    layers = [int(x) for x in args.layers.split("+")] if args.layers else [666, 555, 444]
     dropout = args.dropout if args.dropout else .333
     lr = args.lr if args.lr else 6.66e-5
     decay = args.decay if args.decay else 0
@@ -227,7 +226,7 @@ def main():
     batch_size = args.batch if args.batch else 64
     retrain = True if args.retrain else False
 
-    load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_size, retrain=retrain)
+    load_and_train(lib_name, layers, dropout, lr, decay, epochs, batch_size, retrain=retrain)
 
 if __name__ == "__main__":
     main()
