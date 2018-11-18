@@ -196,6 +196,7 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_si
     print("Learning Rate:".ljust(15), lr)
     print("Decay:".ljust(15), decay)
     print("Epochs:".ljust(15), epochs)
+    print("Batch size:".ljust(15), batch_size)
     print("Parameters:".ljust(15), model.count_params())
 
     fit_model(model, model_name, dataset, epochs, start_epoch, batch_size)
