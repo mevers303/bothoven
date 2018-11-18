@@ -161,7 +161,7 @@ def load_and_train(lib_name, layers, nodes, dropout, lr, decay, epochs, batch_si
 
     print("THIS IS BOTHOVEN!")
 
-    model_name = lib_name + f"_777666555444_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
+    model_name = lib_name + f"_888666444_drop{dropout}_lr{lr:.2e}_decay{decay}_batch{batch_size}"
 
     # if we're retraining, delete the cached models
     if retrain:
