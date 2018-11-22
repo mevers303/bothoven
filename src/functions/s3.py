@@ -79,12 +79,12 @@ def down_sync_s3(dir, overwrite=False, verbose=True):
     
     bucket = get_bucket()
     files = get_filenames(dir)
+    keys = [key.name for key in bucket.get_all_keys() if key.name.startswith(dir)]
 
     if overwrite:
-        download_files(bucket, files, verbose=verbose)
+        download_files(bucket, keys, verbose=verbose)
         return len(files)
     else:
-        keys = [key.name for key in bucket.get_all_keys() if key.name.startswith(dir)]
         new_files = set(keys) - set(files)
         download_files(bucket, new_files, verbose=verbose)
         return len(new_files)
