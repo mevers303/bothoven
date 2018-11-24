@@ -18,7 +18,7 @@ import functions.s3 as s3
 
 # fix random seed for reproducibility
 np.random.seed(777)
-# tf.logging.set_verbosity(tf.logging.ERROR)
+tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(tf.logging.ERROR)
 
 
