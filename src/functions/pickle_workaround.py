@@ -38,16 +38,18 @@ class BigFile(object):
             idx += batch_size
 
 
-def pickle_dump(obj, file_path):
-    print(f" -> Caching {file_path}...")
+def pickle_dump(obj, file_path, verbose=True):
+    if verbose:
+        print(f" -> Caching {file_path}...")
     with open(file_path, "wb") as f:
         result = pickle.dump(obj, BigFile(f), protocol=pickle.HIGHEST_PROTOCOL)
     # print(" -> Done")
     return result
 
 
-def pickle_load(file_path):
-    print(f" -> Loading {file_path} from cache...")
+def pickle_load(file_path, verbose=True):
+    if verbose:
+        print(f" -> Loading {file_path} from cache...")
     with open(file_path, "rb") as f:
         obj = pickle.load(BigFile(f))
     # print(" -> Done")
