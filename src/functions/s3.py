@@ -92,4 +92,4 @@ def down_sync_s3(dir, overwrite=False, verbose=True):
 
 if __name__ == "__main__":
     down_sync_s3("models")
-    down_sync_s3("tensorboard")
+    down_sync_s3("tensorboard", overwrite=True)
