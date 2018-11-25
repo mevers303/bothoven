@@ -14,7 +14,7 @@ def build_csv(cache_dir):
     done = 0
     csv_path = os.path.join(cache_dir, "key_signatures.csv")
     if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
-        df = pd.read_csv(csv_path)
+        df = pd.read_csv(csv_path, index_col="path")
     else:
         df = pd.DataFrame(columns=["tonic", "mode"])
         df.index.name = "path"
