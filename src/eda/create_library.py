@@ -13,7 +13,7 @@ def main():
 
     lib_name = "Cmaj"
     df = pd.read_csv("/media/mark/Data/midi/midiclassics_m21/key_signatures.csv", index_col="path")
-    Cmaj = [x[:-4] for x in df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")]]
+    Cmaj = df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")]
     lib = Music21LibrarySplit(filenames=Cmaj)
 
     print("Pickling...")

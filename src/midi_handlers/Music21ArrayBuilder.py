@@ -2,6 +2,7 @@ import numpy as np
 import music21
 
 from bothoven_globals import NUM_STEPS
+from functions.pickle_workaround import pickle_load
 
 
 
@@ -16,7 +17,10 @@ class Music21ArrayBuilder:
 
     def mid_to_array(self):
 
-        mid = music21.converter.parse(self.filename)
+        if self.filename.endswith(".pkl"):
+            mid = music21.converter.thaw(self.filename)
+        else:
+            mid = music21.converter.parse(self.filename)
 
         for part in mid.parts:
 
