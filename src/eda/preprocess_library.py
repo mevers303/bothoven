@@ -1,10 +1,10 @@
 import argparse
 import music21 as m21
 import os
+import pandas as pd
 
 from bothoven_globals import progress_bar
 from functions.file_functions import get_filenames
-from functions.pickle_workaround import pickle_dump
 
 
 def get_args():
@@ -25,25 +25,44 @@ def cache(in_dir, out_dir):
 
     files = get_filenames(in_dir, [".mid", ".midi", ".smf"])
     done = 0
+    csv_path = os.path.join(out_dir, "key_signatures.csv")
+    if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
+        df = pd.read_csv(csv_path, index_col="path")
+        needs_column_header = False
+    else:
+        df = pd.DataFrame(columns=["tonic", "mode"])
+        df.index.name = "path"
+        needs_column_header = True
+    csv_f = open(csv_path, "a")
+    if needs_column_header:
+        csv_f.write("path,tonic,mode\n")
 
     for file in files:
 
-        progress_bar(done, len(files), file)
+        progress_bar(done, len(files), "Loading:".ljust(12) + file + "...")
         done += 1
-
-        try:
-            score = m21.converter.parse(file)
-        except Exception as e:
-            continue
 
         relative_path = file[len(in_dir):]
         if relative_path[0] == "/":
             relative_path = relative_path[1:]
         new_file = os.path.join(out_dir, relative_path) + ".pkl"
+        if new_file in df.index.values:
+            continue
         new_dir = os.path.dirname(new_file)
         os.makedirs(new_dir, exist_ok=True)
-        pickle_dump(score, new_file, verbose=False)
 
+        try:
+            score = m21.converter.parse(file)
+        except Exception as e:
+            continue
+        progress_bar(done - 1, len(files), "Analyzing:".ljust(12) + file + "...")
+        key = score.analyze('key')
+        csv_f.write(",".join([f'"{new_file}"', key.tonic.name, key.mode]) + "\n")
+        csv_f.flush()
+
+        m21.converter.freeze(score, fp=new_file)
+
+    csv_f.close()
     progress_bar(done, len(files), "Done!")
 
 
