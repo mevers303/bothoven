@@ -1,4 +1,5 @@
-import music21
+import argparse
+import music21 as m21
 import os
 
 from bothoven_globals import progress_bar
@@ -7,8 +8,6 @@ from functions.pickle_workaround import pickle_dump
 
 
 def get_args():
-
-    import argparse
 
     parser = argparse.ArgumentParser(
         description="Converts a directory (and subdirectories) of MIDI files to music21 object pickles.")
@@ -33,7 +32,7 @@ def cache(in_dir, out_dir):
         done += 1
 
         try:
-            score = music21.converter.parse(file)
+            score = m21.converter.parse(file)
         except Exception as e:
             continue
 
