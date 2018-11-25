@@ -25,7 +25,7 @@ def build_csv(cache_dir):
         progress_bar(done, len(files), file)
         done += 1
 
-        if file in df.index:
+        if file in df.index.values:
             continue
 
         score = pickle_load(file, verbose=False)
