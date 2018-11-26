@@ -1,10 +1,7 @@
 import numpy as np
 import pandas as pd
-import scipy.sparse as sps
-from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 from functions.pickle_workaround import pickle_dump
 
-from midi_handlers.MusicLibrary import MusicLibrary, MusicLibraryFlat, MusicLibrarySplit
 from midi_handlers.Music21Library import Music21LibrarySplit
 import functions.s3 as s3
 
