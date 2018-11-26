@@ -11,13 +11,13 @@ import functions.s3 as s3
 
 def main():
 
-    lib_name = "Cmaj"
+    lib_name = "Cmaj_small"
     df = pd.read_csv("/media/mark/Data/midi/midiclassics_m21/key_signatures.csv", index_col="path")
-    Cmaj = df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")]
-    lib = Music21LibrarySplit(filenames=Cmaj)
+    corpus = np.random.choice(df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")], size=120, replace=False)
+    lib = Music21LibrarySplit(filenames=corpus)
 
     print("Pickling...")
-    path = f"midi/pickles/{lib_name}.pkl"
+    path = f"midi/pickles/{lib_name}_cont_offset.pkl"
     pickle_dump(lib, path)
     s3.upload_file(path)
     print("Done!")
