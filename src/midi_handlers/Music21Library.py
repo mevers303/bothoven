@@ -20,8 +20,6 @@ class Music21Library(MusicLibraryFlat):
         self.one_hot_to_note = None
         self.duration_to_one_hot = None
         self.one_hot_to_duration = None
-        self.offset_to_one_hot = None
-        self.one_hot_to_offset = None
 
         super().__init__(Music21ArrayBuilder, base_dir, filenames, autoload)
 
@@ -38,12 +36,10 @@ class Music21Library(MusicLibraryFlat):
         temp_buf = np.vstack(self.buf)
         notes = temp_buf[:, 0]
         durations = temp_buf[:, 1]
-        offsets = temp_buf[:, 2]
 
         self.note_to_one_hot, self.one_hot_to_note = self.convert_to_one_hot(notes)
         self.duration_to_one_hot, self.one_hot_to_duration = self.convert_to_one_hot(durations)
-        self.offset_to_one_hot, self.one_hot_to_offset = self.convert_to_one_hot(offsets)
-        self.num_features = len(self.note_to_one_hot) + len(self.duration_to_one_hot) + len(self.offset_to_one_hot)
+        self.num_features = len(self.note_to_one_hot) + len(self.duration_to_one_hot) + 1
 
         print(f"Found {temp_buf.shape[0]} rows with {self.num_features} features!")
 
@@ -61,8 +57,7 @@ class Music21Library(MusicLibraryFlat):
 class Music21LibraryFlat(Music21Library):
 
     def __init__(self, base_dir="", filenames=None, autoload=True, note_to_one_hot=None, one_hot_to_note=None,
-                 duration_to_one_hot=None, one_hot_to_duration=None, offset_to_one_hot=None, one_hot_to_offset=None,
-                 num_features=None):
+                 duration_to_one_hot=None, one_hot_to_duration=None, num_features=None):
 
         super().__init__(base_dir, filenames, False)
 
@@ -70,9 +65,9 @@ class Music21LibraryFlat(Music21Library):
         self.one_hot_to_note = one_hot_to_note
         self.duration_to_one_hot = duration_to_one_hot
         self.one_hot_to_duration = one_hot_to_duration
-        self.offset_to_one_hot = offset_to_one_hot
-        self.one_hot_to_offset = one_hot_to_offset
         self.num_features = num_features
+        self.avg_offset = 0
+        self.max_offset = 0
 
         if autoload:
             self.load_files()
@@ -88,12 +83,17 @@ class Music21LibraryFlat(Music21Library):
         notes = temp_buf[:, 0]
         durations = temp_buf[:, 1]
         offsets = temp_buf[:, 2]
+        # normalize the offsets
+        self.avg_offset = offsets.mean()
+        self.max_offset = np.max([np.abs(n) for n in offsets])
+        offsets = offsets - self.avg_offset
+        offsets = offsets / self.max_offset
 
         x = [i for i in range(temp_buf.shape[0])] * 3
-        y = [self.note_to_one_hot[x] for x in notes] + \
-            [self.duration_to_one_hot[x] + len(self.note_to_one_hot) for x in durations] + \
-            [self.offset_to_one_hot[x] + len(self.note_to_one_hot) + len(self.duration_to_one_hot) for x in offsets]
-        data = [1 for _ in range(temp_buf.shape[0] * 3)]
+        y = [self.note_to_one_hot[note] for note in notes] + \
+            [self.duration_to_one_hot[duration] + len(self.note_to_one_hot) for duration in durations] + \
+            [len(self.note_to_one_hot) + len(self.duration_to_one_hot) for _ in range(offsets.shape[0])]
+        data = [1 for _ in range(temp_buf.shape[0] * 2)] + list(offsets)
 
         self.buf = sps.csr_matrix((data, (x, y)), shape=(temp_buf.shape[0], self.num_features), dtype=np.byte)
 
@@ -113,7 +113,7 @@ class Music21LibraryFlat(Music21Library):
                     yield np.array(batch_x), {
                                               "n": yield_y[:, :len(self.note_to_one_hot)],
                                               "d": yield_y[:, len(self.note_to_one_hot):len(self.note_to_one_hot) + len(self.duration_to_one_hot)],
-                                              "o": yield_y[:, len(self.note_to_one_hot) + len(self.duration_to_one_hot):]
+                                              "o": yield_y[:, len(self.note_to_one_hot) + len(self.duration_to_one_hot)]
                                              }
                     batch_x.clear()
                     batch_y.clear()
@@ -127,7 +127,7 @@ class Music21LibraryFlat(Music21Library):
             yield np.array(batch_x), {
                                       "n": yield_y[:, :len(self.note_to_one_hot)],
                                       "d": yield_y[:, len(self.note_to_one_hot):len(self.note_to_one_hot) + len(self.duration_to_one_hot)],
-                                      "o": yield_y[:, len(self.note_to_one_hot) + len(self.duration_to_one_hot):]
+                                      "o": yield_y[:, len(self.note_to_one_hot) + len(self.duration_to_one_hot)]
                                      }
             batch_x.clear()
             batch_y.clear()
@@ -164,8 +164,6 @@ class Music21LibrarySplit(Music21Library):
                                             one_hot_to_note=self.one_hot_to_note,
                                             duration_to_one_hot=self.duration_to_one_hot,
                                             one_hot_to_duration=self.one_hot_to_duration,
-                                            offset_to_one_hot=self.offset_to_one_hot,
-                                            one_hot_to_offset=self.one_hot_to_offset,
                                             num_features=self.num_features)
         self.train_lib.buf = [self.buf[x] for x in self.train_indices]
         self.train_lib.explode_buf()
@@ -176,8 +174,6 @@ class Music21LibrarySplit(Music21Library):
                                            one_hot_to_note=self.one_hot_to_note,
                                            duration_to_one_hot=self.duration_to_one_hot,
                                            one_hot_to_duration=self.one_hot_to_duration,
-                                           offset_to_one_hot=self.offset_to_one_hot,
-                                           one_hot_to_offset=self.one_hot_to_offset,
                                            num_features=self.num_features)
         self.test_lib.buf = [self.buf[x] for x in self.test_indices]
         self.test_lib.explode_buf()
@@ -190,11 +186,7 @@ def main():
     import os
 
     lib_name = "chopin_2hand"
-
     lib = Music21LibrarySplit(os.path.join("midi", lib_name))
-    # from music21.corpus import getComposer
-    # filenames = [x.as_posix() for x in getComposer("bach")]
-    # lib = Music21LibrarySplit(filenames=filenames)
 
     print("Pickling...")
     path = f"midi/pickles/{lib_name}_m21.pkl"
