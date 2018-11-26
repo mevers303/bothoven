@@ -42,17 +42,17 @@ class Music21ArrayBuilder:
     def parse_msg(self, msg):
 
         if msg.beat < self.last_beat:
-            self.buf.append([-2, -2, -2]) # a measure_start
+            self.buf.append([-2, -2, -2])  # a measure_start
 
         # find the one-hot note
         if msg.isNote:
-            self.buf.append([msg.pitch.midi, msg.quarterLength, msg.beat])
+            self.buf.append([msg.pitch.midi, min([msg.quarterLength, 8]), msg.beat])
         elif msg.isRest:
-            self.buf.append([128, msg.quarterLength, msg.beat])
+            self.buf.append([128, min([msg.quarterLength, 8]), msg.beat])
         elif msg.isChord:
             self.buf.append([-3, -3, -3])  # chord_start one-hot
             for note in msg._notes:
-                self.buf.append([note.pitch.midi, note.quarterLength, msg.beat])
+                self.buf.append([note.pitch.midi, min([note.quarterLength, 8]), msg.beat])
             self.buf.append([-4, -4, -4])  # chord_end one-hot
         else:
             raise TypeError("Unknown message in notesAndRests: " + msg.fullName)
