@@ -129,7 +129,8 @@ def load_model(dataset, model_name, layers, dropout, lr, decay, use_tpu=False, r
     optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
     losses = {"n": "categorical_crossentropy", "d": "categorical_crossentropy", "o": "categorical_crossentropy"}
     metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
-    model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
+    loss_weights = {"n": 1, "d": 1, "o": 10}
+    model.compile(optimizer=optimizer, loss=losses, metrics=metrics, loss_weights=loss_weights)
 
     if use_tpu:
         print(" -> converting to TPU model...")
