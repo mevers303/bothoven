@@ -189,8 +189,7 @@ def main():
 
     import os
 
-    lib_name = "chopin_2hand"
-
+    lib_name = "format0_maj"
     lib = Music21LibrarySplit(os.path.join("midi", lib_name))
     # from music21.corpus import getComposer
     # filenames = [x.as_posix() for x in getComposer("bach")]

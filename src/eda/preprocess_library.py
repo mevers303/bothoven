@@ -26,6 +26,7 @@ def cache(in_dir, out_dir):
     files = get_filenames(in_dir, [".mid", ".midi", ".smf"])
     done = 0
     csv_path = os.path.join(out_dir, "key_signatures.csv")
+    os.makedirs(out_dir, exist_ok=True)
     if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
         df = pd.read_csv(csv_path, index_col="path")
         needs_column_header = False
@@ -39,7 +40,7 @@ def cache(in_dir, out_dir):
 
     for file in files:
 
-        progress_bar(done, len(files), "Loading:".ljust(12) + file + "...")
+        progress_bar(done, len(files), "Loading:".ljust(11) + file + "...")
         done += 1
 
         relative_path = file[len(in_dir):]

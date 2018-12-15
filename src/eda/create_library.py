@@ -11,10 +11,14 @@ import functions.s3 as s3
 
 def main():
 
-    lib_name = "Cmaj"
-    df = pd.read_csv("/media/mark/Data/midi/midiclassics_m21/key_signatures.csv", index_col="path")
-    Cmaj = df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")]
-    lib = Music21LibrarySplit(filenames=Cmaj)
+    lib_name = "Cmaj_small"
+    df = pd.read_csv("/home/mark/Documents/python/bothoven/midi/format0/key_signatures.csv", index_col="path")
+    # corpus = np.random.choice(df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")], size=120, replace=False)
+    # corpus = df.index.values[(df["tonic"] == "C") & (df["mode"] == "major")]
+    corpus = df.index.values[(df["mode"] == "major")]
+    np.random.shuffle(corpus)
+    lib = Music21LibrarySplit(filenames=corpus)
+
 
     print("Pickling...")
     path = f"midi/pickles/{lib_name}.pkl"

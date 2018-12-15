@@ -1,4 +1,4 @@
-import keras
+import tensorflow.keras as keras
 import numpy as np
 import music21
 
@@ -8,12 +8,12 @@ from midi_handlers.Music21ArrayBuilder import Music21ArrayBuilder
 from midi_handlers.Music21Library import Music21LibraryFlat, Music21LibrarySplit
 
 
-lib_name = "chopin_2hand_m21"
-model_json = "models-old/chopin_2hand_m21_666555444_drop0.333_lr6.66e-05_decay0_batch64/chopin_2hand_m21_666555444_drop0.333_lr6.66e-05_decay0_batch64.json"
-model_h5 = "models-old/chopin_2hand_m21_666555444_drop0.333_lr6.66e-05_decay0_batch64/epoch_020_4.2121.h5"
-seed_file = "/home/mark/Documents/python/bothoven/midi/chopin_2hand/Sonata op35 n3 .mid"
+lib_name = "Cmaj"
+model_json = "/home/mark/Documents/python/bothoven/models/Cmaj_888-666-444_drop0.333_lr6.66e-05_decay0_batch64/Cmaj_888-666-444_drop0.333_lr6.66e-05_decay0_batch64.json"
+model_h5 = "/home/mark/Documents/python/bothoven/models/Cmaj_888-666-444_drop0.333_lr6.66e-05_decay0_batch64/epoch_025_3.4246.h5"
+seed_file = "/media/mark/Data/midi/midiclassics_m21/Bach/Bwv001- 400 Chorales/025500b_.mid.pkl"
 num_predictions = 200
-start_i = 1000
+start_i = 64
 
 
 def song_buf_to_onehot(integer_encoded_song, dataset):
@@ -62,8 +62,8 @@ notes_in_chord = 0
 for i in range(num_predictions):
 
     p = model.predict(np.array([seed[i + start_i:i + start_i + NUM_STEPS]]))
-    p_note = sample(p[0][0], temperature=2)
-    p_duration = sample(p[1][0], temperature=1.2)
+    p_note = sample(p[0][0], temperature=1.5)
+    p_duration = sample(p[1][0], temperature=1.5)
     p_offset = np.argmax(p[2][0])
 
     new_song[i + NUM_STEPS, p_note] = 1
@@ -85,7 +85,7 @@ for i in range(num_predictions):
                 part.append(music21.chord.Chord(current_list))
                 notes_in_chord = 0
             current_list = part
-        elif note >= 0:
+        elif note >= 0 and duration >= 0:
             if notes_in_chord >= 4:
                 part.append(music21.chord.Chord(current_list))
                 notes_in_chord = 0
