@@ -22,9 +22,9 @@ class Music21ArrayBuilder:
         else:
             mid = music21.converter.parse(self.filename)
 
-        key = mid.analyze('key')
-        if key.tonic.name != "C" or key.mode != "major":
-            raise KeyError(self.filename + " is not in the key of C major!")
+        # key = mid.analyze('key')
+        # if key.tonic.name != "C" or key.mode != "major":
+        #     raise KeyError(self.filename + " is not in the key of C major!")
 
         for part in mid.parts:
 
