@@ -126,7 +126,8 @@ def load_model(dataset, model_name, layers, dropout, lr, decay, use_tpu=False, r
         model = create_model(dataset, model_name, layers, dropout)
 
     print("Compiling model...")
-    optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
+    # optimizer = keras.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=None, decay=decay)
+    optimizer = keras.optimizers.Adam()
     losses = {"n": "categorical_crossentropy", "d": "categorical_crossentropy", "o": "categorical_crossentropy"}
     metrics = {"n": "categorical_accuracy", "d": "categorical_accuracy", "o": "categorical_accuracy"}
     model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
