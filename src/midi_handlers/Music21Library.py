@@ -190,7 +190,7 @@ def main():
     import os
 
     lib_name = "format0_maj"
-    lib = Music21LibrarySplit(os.path.join("midi", lib_name))
+    lib = Music21LibrarySplit(os.path.join("midi", lib_name), split_ratio=.17)
     # from music21.corpus import getComposer
     # filenames = [x.as_posix() for x in getComposer("bach")]
     # lib = Music21LibrarySplit(filenames=filenames)
