@@ -148,5 +148,10 @@ def doit(seed_file):
         note_temp += 0.1
 
 
-for file in seed_files:
-    doit(file)
+def main():
+    for file in seed_files:
+        doit(file)
+
+
+if __name__ == "__main__":
+    main()
