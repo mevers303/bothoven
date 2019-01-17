@@ -81,7 +81,7 @@ model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=tf.contrib.tpu.TPUDist
 
 print("Loading dataset...")
 download_file(f"midi/pickles/{lib_name}.pkl")
-down_sync_s3("midi/format0_maj")
+down_sync_s3("midi/format0_maj", verbose=False)
 dataset = pickle_load(f"midi/pickles/{lib_name}.pkl")
 
 
