@@ -2,6 +2,7 @@ import tensorflow.keras as keras
 import numpy as np
 import music21
 import os
+import tensorflow as tf
 
 from bothoven_globals import NUM_STEPS, progress_bar
 from functions.pickle_workaround import pickle_load
@@ -73,6 +74,10 @@ with open(model_json, "r") as f:
     model = keras.models.model_from_json(f.read())
 print(" -> Loading weights...")
 model.load_weights(model_h5)
+print(" -> converting to TPU model...")
+model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=tf.contrib.tpu.TPUDistributionStrategy(
+            tf.contrib.cluster_resolver.TPUClusterResolver('grpc://' + os.environ['COLAB_TPU_ADDR'])))
+
 
 print("Loading dataset...")
 download_file(f"midi/pickles/{lib_name}.pkl")
