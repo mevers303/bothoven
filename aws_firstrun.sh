@@ -6,7 +6,4 @@ sudo apt install screen -y
 
 source activate tensorflow_p36
 conda upgrade --all -y
-pip install tensorboard keras music21
-source deactivate
-
-screen -S training bash run.sh
+pip install tensorflow tensorboard keras music21 boto3
