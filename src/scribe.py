@@ -13,10 +13,10 @@ from functions.s3 import download_file, down_sync_s3, upload_file
 
 lib_name = "format0_maj_m21"
 model_json = "models/format0_maj_m21_888-666-444_drop0.333_lr6.66e-05_decay0_batch64/format0_maj_m21_888-666-444_drop0.333_lr6.66e-05_decay0_batch64.json"
-download_file(model_json)
+# download_file(model_json)
 model_h5 = "models/format0_maj_m21_888-666-444_drop0.333_lr6.66e-05_decay0_batch64/epoch_010_4.3823.h5"
-download_file(model_h5)
-num_predictions = 420
+# download_file(model_h5)
+num_predictions = 100
 start_i = 420
 seed_files = ['chpn_op25_e1_format0.mid',
                  'mz_333_2_format0.mid',
@@ -74,14 +74,14 @@ with open(model_json, "r") as f:
     model = keras.models.model_from_json(f.read())
 print(" -> Loading weights...")
 model.load_weights(model_h5)
-print(" -> converting to TPU model...")
-model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=tf.contrib.tpu.TPUDistributionStrategy(
-            tf.contrib.cluster_resolver.TPUClusterResolver('grpc://' + os.environ['COLAB_TPU_ADDR'])))
+# print(" -> converting to TPU model...")
+# model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=tf.contrib.tpu.TPUDistributionStrategy(
+#             tf.contrib.cluster_resolver.TPUClusterResolver('grpc://' + os.environ['COLAB_TPU_ADDR'])))
 
 
 print("Loading dataset...")
-download_file(f"midi/pickles/{lib_name}.pkl")
-down_sync_s3("midi/format0_maj", verbose=False)
+# download_file(f"midi/pickles/{lib_name}.pkl")
+# down_sync_s3("midi/format0_maj", verbose=False)
 dataset = pickle_load(f"midi/pickles/{lib_name}.pkl")
 
 
@@ -146,7 +146,7 @@ def doit(seed_file):
             score.insert(0, part)
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             score.write('midi', fp=output_file)
-            upload_file(output_file)
+            # upload_file(output_file)
 
             duration_temp += 0.1
 
